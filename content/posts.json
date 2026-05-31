@@ -1,0 +1,7 @@
+[
+  { "cat": "Manifiesto", "title": "Por qué BUIDL y no build",                 "read": "4 min",  "date": "12 may 2026", "author": "Pedro Rey",     "excerpt": "El error de tipeo que se volvió filosofía: construir importa más que especular. Una mirada al ethos builder desde los Andes.", "feat": true },
+  { "cat": "Técnico",    "title": "Account abstraction para el par BOB/USDT", "read": "9 min",  "date": "06 may 2026", "author": "nodo sur",      "excerpt": "Transacciones gasless y on-ramp en bolivianos: arquitectura del relayer de samay.relay." },
+  { "cat": "Ecosistema", "title": "YPFB, el dólar y la blockchain",           "read": "7 min",  "date": "28 abr 2026", "author": "Redacción",     "excerpt": "Qué significa que la estatal pague combustible con cripto, y qué oportunidad abre para builders locales." },
+  { "cat": "Comunidad",  "title": "Crónica: 200 hackers, 3 días, 1 país",     "read": "6 min",  "date": "15 abr 2026", "author": "Buidlers",      "excerpt": "Lo que aprendimos organizando la primera hackathon Web3 de Bolivia." },
+  { "cat": "Tutorial",   "title": "Tu primer contrato verificable",           "read": "11 min", "date": "02 abr 2026", "author": "lab altiplano", "excerpt": "Solidity + Foundry + verificación en el explorador, paso a paso." }
+]

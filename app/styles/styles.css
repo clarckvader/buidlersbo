@@ -1,0 +1,147 @@
+/* =========================================================================
+   BUIDLERS BOLIVIA — design tokens & base
+   Terminal-grotesque, elevated. Graphite + electric yellow.
+   ========================================================================= */
+
+:root {
+  /* ---- color: graphite layers (oklch, cool-neutral) ---- */
+  --bg:        oklch(0.155 0.005 270);   /* page base */
+  --bg-2:      oklch(0.185 0.006 270);   /* raised surface */
+  --bg-3:      oklch(0.225 0.007 270);   /* card / hover */
+  --line:      oklch(1 0 0 / 0.10);      /* hairline border */
+  --line-2:    oklch(1 0 0 / 0.18);      /* stronger border */
+
+  /* ---- text ---- */
+  --ink:       oklch(0.96 0.003 270);    /* primary text */
+  --ink-dim:   oklch(0.78 0.004 270);    /* secondary */
+  --ink-mute:  oklch(0.58 0.006 270);    /* tertiary / mono labels */
+  --ink-faint: oklch(0.42 0.006 270);    /* ghost */
+
+  /* ---- accents ---- */
+  --yellow:    oklch(0.90 0.185 104);    /* electric JS yellow */
+  --yellow-dim:oklch(0.90 0.185 104 / 0.14);
+  --amber:     oklch(0.78 0.14 62);      /* string orange */
+  --cyan:      oklch(0.82 0.12 200);     /* sparing cool accent (redes) */
+  --green:     oklch(0.84 0.16 150);     /* status ok */
+  --red:       oklch(0.72 0.18 25);      /* status alert */
+
+  /* ---- type ---- */
+  --display: "Space Grotesk", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, monospace;
+
+  /* ---- geometry ---- */
+  --rail: 256px;          /* left nav width */
+  --maxw: 1180px;
+  --r: 4px;               /* sharp, terminal-ish radius */
+  --r-lg: 10px;
+
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--display);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+/* faint engineering grid behind everything */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(oklch(1 0 0 / 0.018) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(1 0 0 / 0.018) 1px, transparent 1px);
+  background-size: 64px 64px;
+  mask-image: radial-gradient(ellipse 120% 90% at 50% 0%, #000 30%, transparent 100%);
+}
+
+::selection { background: var(--yellow); color: #000; }
+
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--bg-3); border-radius: 99px; border: 2px solid var(--bg); }
+::-webkit-scrollbar-thumb:hover { background: var(--line-2); }
+
+/* ---- shared typographic helpers ---- */
+.mono { font-family: var(--mono); }
+.kbd-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+}
+.tok-key { color: var(--yellow); }
+.tok-str { color: var(--amber); }
+.tok-com { color: var(--ink-faint); }
+.tok-fn  { color: var(--cyan); }
+
+/* blinking cursor */
+.cursor {
+  display: inline-block;
+  width: 0.55ch;
+  height: 1em;
+  margin-left: 2px;
+  background: var(--yellow);
+  translate: 0 0.12em;
+  animation: blink 1.05s steps(1) infinite;
+}
+@keyframes blink { 0%,50% { opacity: 1; } 50.01%,100% { opacity: 0; } }
+
+/* ---- reveal on scroll (scroll-driven where supported) ---- */
+/* ---- reveal: entrance animation, but rests VISIBLE (no fill-mode pinning) ---- */
+@keyframes reveal-in { from { opacity: 0; translate: 0 18px; } to { opacity: 1; translate: 0 0; } }
+.reveal { opacity: 1; animation: reveal-in 0.65s var(--ease); }
+.reveal.is-in { animation: reveal-in 0.65s var(--ease); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  .reveal { opacity: 1; translate: none; }
+}
+
+/* ---- buttons ---- */
+.btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-family: var(--mono); font-size: 13px; font-weight: 500;
+  padding: 13px 20px; border-radius: var(--r);
+  border: 1px solid transparent;
+  transition: all 0.22s var(--ease);
+  white-space: nowrap;
+}
+.btn-primary { background: var(--yellow); color: #14140a; }
+.btn-primary:hover { box-shadow: 0 0 0 4px var(--yellow-dim); translate: 0 -1px; }
+.btn-ghost { background: transparent; color: var(--ink); border-color: var(--line-2); }
+.btn-ghost:hover { border-color: var(--yellow); color: var(--yellow); }
+
+/* card */
+.card {
+  background: color-mix(in oklch, var(--bg-2) 80%, transparent);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  transition: border-color 0.25s var(--ease), background 0.25s var(--ease), transform 0.25s var(--ease);
+}
+.card:hover { border-color: var(--line-2); }
+
+/* utility */
+.eyebrow {
+  font-family: var(--mono); font-size: 12px; letter-spacing: 0.12em;
+  text-transform: lowercase; color: var(--yellow);
+}
+.section-pad { padding: clamp(56px, 8vw, 120px) clamp(24px, 5vw, 72px); }
+.fade-edge-r { mask-image: linear-gradient(90deg, #000 80%, transparent); }

@@ -1,0 +1,77 @@
+/* =========================================================================
+   REDES — real Bolivia map (SVG) + node presence
+   ========================================================================= */
+.net-wrap { max-width: var(--maxw); }
+.net-layout { display: grid; grid-template-columns: 1fr 320px; gap: 24px; align-items: start; }
+
+.netmap {
+  position: relative; aspect-ratio: 76 / 70; border: 1px solid var(--line-2); border-radius: var(--r);
+  background:
+    radial-gradient(circle at 42% 36%, color-mix(in oklch, var(--yellow) 5%, transparent), transparent 60%),
+    var(--bg);
+  overflow: hidden;
+}
+.netmap__grid { position: absolute; inset: 0; background-image:
+  linear-gradient(var(--line) 1px, transparent 1px),
+  linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 6.25% 6.25%; opacity: 0.4; pointer-events: none; }
+.netmap__corner { position: absolute; font-family: var(--mono); font-size: 10px; color: var(--ink-faint); z-index: 3; }
+.netmap__corner.tl { top: 12px; left: 14px; } .netmap__corner.br { bottom: 12px; right: 14px; }
+.net-loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--ink-mute); font-size: 13px; }
+
+.net-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+
+/* country silhouette */
+.bo-shape {
+  fill: color-mix(in oklch, var(--bg-2) 86%, var(--yellow) 4%);
+  stroke: color-mix(in oklch, var(--yellow) 55%, transparent);
+  stroke-width: 1.4; stroke-linejoin: round;
+  filter: drop-shadow(0 0 22px color-mix(in oklch, var(--yellow) 14%, transparent));
+}
+.bo-edge { stroke: color-mix(in oklch, var(--yellow) 45%, transparent); stroke-width: 1; stroke-dasharray: 3 4; opacity: 0.55; }
+
+.bo-node .bo-dot { fill: var(--yellow); transition: r 0.2s var(--ease); }
+.bo-node--naciente .bo-dot { fill: var(--ink-mute); }
+.bo-node--activo .bo-dot { fill: color-mix(in oklch, var(--yellow) 65%, var(--cyan)); }
+.bo-node.sel .bo-dot, .bo-node:hover .bo-dot { fill: var(--yellow); }
+.bo-node.sel .bo-dot { stroke: #14140a; stroke-width: 2; }
+
+.bo-pulse { fill: none; stroke: var(--yellow); stroke-width: 1; opacity: 0; transform-box: fill-box; transform-origin: center; animation: bopulse 2.8s ease-out infinite; }
+.bo-node--activo .bo-pulse { stroke: var(--cyan); }
+@keyframes bopulse { 0% { opacity: 0.7; transform: scale(1); } 100% { opacity: 0; transform: scale(3.4); } }
+
+.bo-label { font-family: var(--mono); font-size: 12.5px; fill: var(--ink-dim); pointer-events: none; }
+.bo-node.sel .bo-label, .bo-node:hover .bo-label { fill: var(--yellow); }
+
+.net-tip {
+  position: absolute; pointer-events: none; z-index: 5;
+  padding: 10px 12px; background: var(--bg-3); border: 1px solid var(--line-2);
+  border-radius: var(--r); font-family: var(--mono); font-size: 12px;
+  width: max-content; max-width: min(190px, 78%); box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.net-tip .ct { color: var(--yellow); } .net-tip .mb { color: var(--ink); margin-top: 2px; } .net-tip .nt { color: var(--ink-mute); font-size: 11px; margin-top: 4px; }
+
+/* side list */
+.net-side h3 { font-family: var(--mono); font-size: 13px; color: var(--ink-mute); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 14px; }
+.net-stat-row { display: flex; gap: 12px; margin-bottom: 18px; }
+.net-stat { flex: 1; border: 1px solid var(--line); border-radius: var(--r); padding: 14px; }
+.net-stat .n { font-size: 26px; font-weight: 600; color: var(--yellow); letter-spacing: -0.02em; }
+.net-stat .l { font-family: var(--mono); font-size: 11px; color: var(--ink-mute); margin-top: 4px; }
+
+.citylist { border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.cityrow { display: flex; align-items: center; gap: 12px; padding: 13px 15px; border-bottom: 1px solid var(--line); cursor: pointer; transition: background 0.16s; }
+.cityrow:last-child { border-bottom: 0; }
+.cityrow:hover, .cityrow.sel { background: var(--bg-2); }
+.cityrow.sel { box-shadow: inset 3px 0 0 var(--yellow); }
+.cityrow__name { font-family: var(--mono); font-size: 14px; color: var(--ink); }
+.cityrow__bar { flex: 1; height: 4px; background: var(--bg-3); border-radius: 99px; overflow: hidden; }
+.cityrow__bar i { display: block; height: 100%; background: var(--yellow); }
+.cityrow__n { font-family: var(--mono); font-size: 12px; color: var(--ink-mute); width: 34px; text-align: right; }
+.cityrow__s { width: 8px; height: 8px; border-radius: 99px; flex: 0 0 auto; }
+.s-hub { background: var(--yellow); } .s-activo { background: color-mix(in oklch, var(--yellow) 65%, var(--cyan)); } .s-naciente { background: var(--ink-mute); }
+
+.net-legend { display: flex; gap: 16px; margin-top: 14px; font-family: var(--mono); font-size: 11.5px; color: var(--ink-mute); flex-wrap: wrap; }
+.net-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.net-legend i { width: 8px; height: 8px; border-radius: 99px; }
+
+@media (max-width: 860px) { .net-layout { grid-template-columns: 1fr; } }

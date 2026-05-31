@@ -1,0 +1,15 @@
+{
+  "_comment": "Textos globales de la landing. Editables desde el CMS.",
+  "values": [
+    { "k": "SOBERANIA",     "v": "control total e inalienable sobre la propia identidad y los datos." },
+    { "k": "AUTONOMIA",     "v": "ejecutar código sin pedir permiso; libertad para crear." },
+    { "k": "RESILIENCIA",   "v": "la caída de un nodo no compromete la totalidad del sistema." },
+    { "k": "TRANSPARENCIA", "v": "la lógica visible es la base de la confianza." }
+  ],
+  "stats": [
+    { "n": "+530%",  "l": "crecimiento de transacciones cripto en Bolivia",        "src": ".economy" },
+    { "n": "200+",   "l": "hackers reunidos en la 1ª Buildathon Web3 del país",     "src": ".buidl" },
+    { "n": "2021",   "l": "génesis en La Paz · eventos mensuales desde entonces",   "src": ".genesis" },
+    { "n": "$46.5M", "l": "volumen on-chain en el primer semestre medido",          "src": ".volume" }
+  ]
+}

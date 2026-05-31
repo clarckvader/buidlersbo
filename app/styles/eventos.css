@@ -1,0 +1,38 @@
+/* =========================================================================
+   EVENTOS
+   ========================================================================= */
+.ev-wrap { max-width: var(--maxw); }
+.ev-list { display: flex; flex-direction: column; gap: 14px; }
+
+.evcard { display: grid; grid-template-columns: 96px 1fr auto; gap: 24px; align-items: center; padding: 22px 26px; position: relative; overflow: hidden; }
+.evcard__date { text-align: center; border-right: 1px solid var(--line); padding-right: 22px; }
+.evcard__d { font-size: 38px; font-weight: 600; letter-spacing: -0.03em; line-height: 1; color: var(--ink); }
+.evcard__mo { font-family: var(--mono); font-size: 12px; color: var(--yellow); letter-spacing: 0.1em; margin-top: 4px; }
+.evcard__body { min-width: 0; }
+.evcard__head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+.evcard__name { font-size: 21px; font-weight: 500; letter-spacing: -0.01em; }
+.evcard__desc { color: var(--ink-dim); font-size: 14.5px; max-width: 62ch; line-height: 1.5; }
+.evcard__meta { display: flex; gap: 18px; margin-top: 12px; font-family: var(--mono); font-size: 12.5px; color: var(--ink-mute); flex-wrap: wrap; }
+.evcard__meta span { display: inline-flex; align-items: center; gap: 6px; }
+.evcard__meta b { color: var(--ink-dim); font-weight: 400; }
+
+.evcard__cta { display: flex; flex-direction: column; align-items: flex-end; gap: 12px; }
+.evcap { width: 150px; }
+.evcap__lbl { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 11px; color: var(--ink-mute); margin-bottom: 6px; }
+.evcap__bar { height: 5px; border-radius: 99px; background: var(--bg-3); overflow: hidden; }
+.evcap__bar i { display: block; height: 100%; background: var(--yellow); }
+.evcap__bar i.hot { background: var(--amber); }
+
+.ev-type { font-family: var(--mono); font-size: 11px; padding: 3px 10px; border-radius: 99px; letter-spacing: 0.04em; }
+.ev-type.Hackathon { background: var(--yellow); color: #14140a; }
+.ev-type.Meetup { background: var(--bg-3); color: var(--ink-dim); border: 1px solid var(--line); }
+.ev-type.Taller { background: color-mix(in oklch,var(--cyan) 18%,transparent); color: var(--cyan); }
+.ev-type.Conferencia { background: color-mix(in oklch,var(--green) 16%,transparent); color: var(--green); }
+
+.evcard--feat { border-color: color-mix(in oklch, var(--yellow) 40%, var(--line)); background:
+  radial-gradient(140% 200% at 0% 0%, var(--yellow-dim), transparent 40%), color-mix(in oklch, var(--bg-2) 70%, transparent); }
+
+@media (max-width: 760px) {
+  .evcard { grid-template-columns: 70px 1fr; }
+  .evcard__cta { grid-column: 1 / -1; flex-direction: row; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); padding-top: 16px; }
+}

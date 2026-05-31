@@ -1,0 +1,8 @@
+[
+  { "name": "equipo achachi", "focus": "Pagos & wallets",   "city": "La Paz",     "members": 5, "open": 1, "stack": ["Solidity","React","Rust"], "lead": "P. Mamani" },
+  { "name": "nodo sur",       "focus": "DeFi & infra",      "city": "Santa Cruz", "members": 6, "open": 2, "stack": ["Foundry","Go","Next"],     "lead": "D. Áñez" },
+  { "name": "lab altiplano",  "focus": "ZK & privacidad",   "city": "El Alto",    "members": 4, "open": 2, "stack": ["Circom","Noir","TS"],     "lead": "S. Quispe" },
+  { "name": "tejido digital", "focus": "DAOs & gobernanza", "city": "Cochabamba", "members": 5, "open": 0, "stack": ["Solidity","Vue","Py"],     "lead": "M. Rojas" },
+  { "name": "colectivo wara", "focus": "NFT & cultura",     "city": "Sucre",      "members": 3, "open": 1, "stack": ["Solidity","React"],       "lead": "L. Vargas" },
+  { "name": "puente andes",   "focus": "Oráculos & data",   "city": "La Paz",     "members": 4, "open": 1, "stack": ["Rust","TS","Python"],     "lead": "J. Choque" }
+]

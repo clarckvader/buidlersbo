@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import './styles/styles.css';
+@import './styles/layout.css';
+@import './styles/landing.css';
+@import './styles/ranking.css';
+@import './styles/equipo.css';
+@import './styles/redes.css';
+@import './styles/eventos.css';
+@import './styles/blog.css';
+@import './styles/auth.css';

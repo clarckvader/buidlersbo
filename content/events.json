@@ -1,0 +1,7 @@
+[
+  { "date": "2026-06-14", "d": "14", "mo": "JUN", "name": "BUIDL Night #28",            "type": "Meetup",      "city": "La Paz",     "place": "Espacio Simón I. Patiño", "cap": 80,  "taken": 62,  "tag": "mensual",   "desc": "Lightning talks + co-working. Trae tu laptop y un repo." },
+  { "date": "2026-07-04", "d": "04", "mo": "JUL", "name": "Buildathon Bolivia 2026",    "type": "Hackathon",   "city": "Santa Cruz","place": "Manzana 1",               "cap": 250, "taken": 188, "tag": "3 días",    "desc": "La hackathon Web3 más grande del país. $40K en premios." },
+  { "date": "2026-07-22", "d": "22", "mo": "JUL", "name": "Taller: Foundry desde cero", "type": "Taller",      "city": "Cochabamba","place": "ICBA",                    "cap": 40,  "taken": 31,  "tag": "intro",     "desc": "De cero a deploy en testnet. Sin experiencia previa." },
+  { "date": "2026-08-09", "d": "09", "mo": "AGO", "name": "ZK Day",                     "type": "Conferencia", "city": "El Alto",    "place": "UPEA",                    "cap": 120, "taken": 44,  "tag": "avanzado",  "desc": "Pruebas de cero conocimiento aplicadas a identidad." },
+  { "date": "2026-08-30", "d": "30", "mo": "AGO", "name": "Mujeres en Web3",            "type": "Meetup",      "city": "Santa Cruz","place": "Hub Cainco",              "cap": 70,  "taken": 50,  "tag": "comunidad", "desc": "Charlas y mentoría. Construyendo un ecosistema diverso." }
+]
