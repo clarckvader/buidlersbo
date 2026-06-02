@@ -1,4 +1,4 @@
-import { Redes } from '@/components/redes/Redes';
+import { Redes } from '@/components/network/Redes';
 
 export default function RedesPage() {
   return <Redes />;

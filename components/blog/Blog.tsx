@@ -1,7 +1,9 @@
 'use client';
 
+import Link from 'next/link';
 import { SectionHead } from '@/components/shared/SectionHead';
 import { useRevealFallback } from '@/lib/useRevealFallback';
+import { slugify } from '@/lib/slugify';
 import { Post } from '@/lib/types';
 
 export function Blog({ posts }: { posts: Post[] }) {
@@ -30,23 +32,25 @@ export function Blog({ posts }: { posts: Post[] }) {
               <span>·</span>
               <span>{feat.read} lectura</span>
             </div>
-            <button className="btn btn-primary" style={{ marginTop: 24, alignSelf: 'flex-start' }}>
+            <Link href={`/blog/${slugify(feat.title)}`} className="btn btn-primary" style={{ marginTop: 24, alignSelf: 'flex-start' }}>
               leer artículo ↗
-            </button>
+            </Link>
           </div>
         </div>
 
         <div className="blog-grid">
           {rest.map((p) => (
-            <article className="postcard card reveal" key={p.title}>
-              <span className="postcard__cat mono">{p.cat}</span>
-              <h4 className="postcard__title">{p.title}</h4>
-              <p className="postcard__excerpt">{p.excerpt}</p>
-              <div className="postcard__foot">
-                <span>{p.date} · {p.read}</span>
-                <span className="postcard__arrow">↗</span>
-              </div>
-            </article>
+            <Link href={`/blog/${slugify(p.title)}`} key={p.title} style={{ textDecoration: 'none' }}>
+              <article className="postcard card reveal">
+                <span className="postcard__cat mono">{p.cat}</span>
+                <h4 className="postcard__title">{p.title}</h4>
+                <p className="postcard__excerpt">{p.excerpt}</p>
+                <div className="postcard__foot">
+                  <span>{p.date} · {p.read}</span>
+                  <span className="postcard__arrow">↗</span>
+                </div>
+              </article>
+            </Link>
           ))}
         </div>
       </div>

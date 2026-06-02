@@ -1,8 +1,10 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { SectionHead } from '@/components/shared/SectionHead';
 import { Chip } from '@/components/shared/Chip';
+import { slugify } from '@/lib/slugify';
 import { useRevealFallback } from '@/lib/useRevealFallback';
 import { useAuth } from '@/context/AuthContext';
 import { CoffeeEvent } from '@/lib/types';
@@ -38,7 +40,9 @@ export function Eventos({ events }: { events: CoffeeEvent[] }) {
                     <span className="evcard__name">{e.name}</span>
                     <Chip>{e.tag}</Chip>
                   </div>
-                  <p className="evcard__desc">{e.desc}</p>
+                  <Link href={`/eventos/${slugify(e.name)}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                    <p className="evcard__desc">{e.desc} <span style={{ color: 'var(--yellow)' }}>ver detalles ↗</span></p>
+                  </Link>
                   <div className="evcard__meta mono">
                     <span>◷ <b>{e.city}</b></span>
                     <span>@ <b>{e.place}</b></span>

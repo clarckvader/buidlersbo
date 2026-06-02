@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { SectionHead } from '@/components/shared/SectionHead';
 import { Chip } from '@/components/shared/Chip';
 import { useRevealFallback } from '@/lib/useRevealFallback';
+import { slugify } from '@/lib/slugify';
 import { Team } from '@/lib/types';
 
 const AV_COLORS = [
@@ -32,7 +34,8 @@ function TeamsShowcase({ teams }: { teams: Team[] }) {
   return (
     <div className="eq-grid">
       {teams.map((t) => (
-        <div className="teamcard card reveal" key={t.name}>
+        <Link href={`/equipo/${slugify(t.name)}`} key={t.name} style={{ textDecoration: 'none' }}>
+        <div className="teamcard card reveal">
           <div className="teamcard__top">
             <div>
               <div className="teamcard__name">{t.name}</div>
@@ -56,6 +59,7 @@ function TeamsShowcase({ teams }: { teams: Team[] }) {
             <span className="teamcard__lead">lead · {t.lead}</span>
           </div>
         </div>
+        </Link>
       ))}
     </div>
   );
