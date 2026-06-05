@@ -101,3 +101,14 @@
   .stat { border-left: 0 !important; border-top: 1px solid var(--line); }
   .stat:first-child { border-top: 0; }
 }
+@media (max-width: 480px) {
+  /* Shrink hero title to prevent "especulamos." from overflowing narrow viewports */
+  .hero h1 { font-size: clamp(34px, 11vw, 52px); }
+  /* Wrap or clip long mono code lines in the hero */
+  .hero__code { font-size: clamp(11px, 3vw, 13px); white-space: pre-wrap; overflow-wrap: break-word; word-break: break-all; }
+  /* CTA buttons stack vertically on tiny screens */
+  .hero__cta { flex-direction: column; }
+  .hero__cta .btn { width: 100%; justify-content: center; }
+  /* CTA final card title stays readable */
+  .cta-card h3 { font-size: clamp(24px, 7vw, 30px); }
+}

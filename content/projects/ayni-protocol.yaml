@@ -1,0 +1,14 @@
+name: ayni.protocol
+rank: 2
+cat: DeFi
+builder: nodo sur
+loc: Santa Cruz
+metric: $1.8M
+metricL: valor prestado
+delta: '+24'
+tags:
+  - lending
+  - stablecoin
+blurb: Crédito comunitario on-chain inspirado en el ayni andino. Prestar y devolver entre pares.
+funding: Optimism RPGF
+year: '2024'

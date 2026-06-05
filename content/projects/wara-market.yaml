@@ -1,0 +1,14 @@
+name: wara.market
+rank: 6
+cat: NFT
+builder: colectivo wara
+loc: Sucre
+metric: '540'
+metricL: obras vendidas
+delta: '+12'
+tags:
+  - marketplace
+  - arte
+blurb: Mercado de arte digital de creadores bolivianos.
+funding: Buidlers Seed
+year: '2026'

@@ -1,8 +1,6 @@
 import type { Metadata } from 'next';
 import { Space_Grotesk, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
-import { AuthProvider } from '@/context/AuthContext';
-import { ShellClient } from '@/components/ShellClient';
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
@@ -24,11 +22,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="es" className={`${spaceGrotesk.variable} ${jetbrainsMono.variable}`}>
-      <body>
-        <AuthProvider>
-          <ShellClient>{children}</ShellClient>
-        </AuthProvider>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

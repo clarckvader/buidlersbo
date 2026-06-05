@@ -1,0 +1,14 @@
+name: yaku.oracle
+rank: 5
+cat: Infra
+builder: puente andes
+loc: La Paz
+metric: 99.9%
+metricL: uptime
+delta: '+4'
+tags:
+  - oracle
+  - data
+blurb: Oráculo verificable para el par BOB/USDT.
+funding: Self-funded
+year: '2024'

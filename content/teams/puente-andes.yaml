@@ -1,0 +1,10 @@
+name: puente andes
+focus: Oráculos & data
+city: La Paz
+members: 4
+open: 1
+stack:
+  - Rust
+  - TS
+  - Python
+lead: J. Choque

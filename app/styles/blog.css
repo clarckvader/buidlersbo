@@ -27,3 +27,73 @@
 .postcard:hover .postcard__arrow { transform: translate(3px,-3px); color: var(--yellow); }
 
 @media (max-width: 760px) { .blog-feat { grid-template-columns: 1fr; } .blog-feat__media { min-height: 180px; } }
+
+/* ---- Post body (rendered Markdoc) ------------------------------------ */
+.post-body { font-size: 17px; line-height: 1.75; color: var(--ink-dim); }
+
+.post-body h1,
+.post-body h2,
+.post-body h3,
+.post-body h4 {
+  color: var(--ink);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin: 2em 0 0.6em;
+}
+.post-body h1 { font-size: clamp(26px, 3vw, 36px); }
+.post-body h2 { font-size: clamp(20px, 2.4vw, 28px); }
+.post-body h3 { font-size: 20px; }
+.post-body h4 { font-size: 16px; text-transform: uppercase; letter-spacing: 0.04em; font-family: var(--mono); color: var(--ink-mute); }
+
+.post-body p { margin: 0 0 1.4em; }
+
+.post-body a { color: var(--yellow); text-decoration: underline; text-decoration-color: var(--yellow-dim); text-underline-offset: 3px; }
+.post-body a:hover { text-decoration-color: var(--yellow); }
+
+.post-body blockquote {
+  border-left: 3px solid var(--yellow);
+  margin: 1.8em 0;
+  padding: 0.6em 0 0.6em 1.4em;
+  color: var(--ink-mute);
+  font-style: italic;
+}
+
+.post-body code {
+  font-family: var(--mono);
+  font-size: 0.875em;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: 0.15em 0.45em;
+}
+
+.post-body pre {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-lg);
+  padding: 20px 24px;
+  overflow-x: auto;
+  margin: 1.6em 0;
+}
+.post-body pre code { background: none; border: none; padding: 0; font-size: 14px; }
+
+.post-body ul,
+.post-body ol { padding-left: 1.6em; margin: 0 0 1.4em; }
+.post-body li { margin-bottom: 0.4em; }
+
+.post-body img {
+  max-width: 100%;
+  border-radius: var(--r-lg);
+  margin: 1.8em 0;
+  display: block;
+}
+
+.post-body hr {
+  border: none;
+  border-top: 1px solid var(--line);
+  margin: 2.4em 0;
+}
+
+.post-body strong { color: var(--ink); font-weight: 600; }
+.post-body em { color: var(--ink-dim); }

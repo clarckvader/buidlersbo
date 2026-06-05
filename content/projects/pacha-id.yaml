@@ -1,0 +1,15 @@
+name: pacha.id
+rank: 3
+cat: Identidad
+builder: lab altiplano
+loc: El Alto
+metric: 8.7k
+metricL: identidades
+delta: '+9'
+tags:
+  - DID
+  - zk
+  - privacy
+blurb: Identidad descentralizada con pruebas de cero conocimiento. Demuestra sin revelar.
+funding: Buidlers Seed
+year: '2025'

@@ -74,4 +74,8 @@
 .net-legend span { display: inline-flex; align-items: center; gap: 6px; }
 .net-legend i { width: 8px; height: 8px; border-radius: 99px; }
 
-@media (max-width: 860px) { .net-layout { grid-template-columns: 1fr; } }
+@media (max-width: 860px) {
+  .net-layout { grid-template-columns: 1fr; }
+  /* Cap map height on narrow viewports so it doesn't dominate the screen */
+  .netmap { max-height: 65vw; }
+}

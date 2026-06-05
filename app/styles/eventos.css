@@ -36,3 +36,13 @@
   .evcard { grid-template-columns: 70px 1fr; }
   .evcard__cta { grid-column: 1 / -1; flex-direction: row; align-items: center; justify-content: space-between; border-top: 1px solid var(--line); padding-top: 16px; }
 }
+@media (max-width: 440px) {
+  /* Collapse date column — show date inline with month, full-width body */
+  .evcard { grid-template-columns: 1fr; padding: 18px 20px; gap: 16px; }
+  .evcard__date { border-right: 0; padding-right: 0; border-bottom: 1px solid var(--line); padding-bottom: 12px; display: flex; align-items: baseline; gap: 10px; text-align: left; }
+  .evcard__d { font-size: 26px; }
+  .evcard__mo { margin-top: 0; }
+  .evcard__cta { flex-direction: column; align-items: stretch; }
+  .evcap { width: 100%; }
+  .evcard__name { font-size: 18px; }
+}

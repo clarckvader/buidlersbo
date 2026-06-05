@@ -97,3 +97,14 @@
 .mr-row.me .sc { color: var(--yellow); }
 
 @media (max-width: 920px) { .col-8,.col-4,.col-6 { grid-column: span 12; } }
+@media (max-width: 640px) {
+  /* Participant bar: break path + buttons onto separate lines */
+  .pa__bar { flex-wrap: wrap; gap: 6px; font-size: 11px; }
+  .pa__bar .right { margin-left: 0; width: 100%; display: flex; gap: 6px; }
+  .pa__bar .right button { flex: 1; justify-content: center; }
+  /* Countdown units: tighten on tiny screens */
+  .cd-row { gap: 6px; }
+  .cd-unit .v { font-size: clamp(28px, 8vw, 56px); }
+  /* Participant grid padding */
+  .pa { padding: clamp(20px, 5vw, 56px) clamp(16px, 5vw, 64px); }
+}

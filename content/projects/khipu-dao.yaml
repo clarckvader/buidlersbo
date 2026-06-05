@@ -1,0 +1,14 @@
+name: khipu.dao
+rank: 4
+cat: Gobernanza
+builder: tejido digital
+loc: Cochabamba
+metric: '32'
+metricL: colectivos
+delta: '+31'
+tags:
+  - DAO
+  - voting
+blurb: Herramientas de gobernanza para cooperativas y colectivos.
+funding: Grant comunidad
+year: '2025'

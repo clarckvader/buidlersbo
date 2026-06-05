@@ -1,0 +1,15 @@
+name: qori.wallet
+rank: 1
+cat: Pagos
+builder: equipo achachi
+loc: La Paz
+metric: 12.4k
+metricL: wallets creadas
+delta: '+18'
+tags:
+  - wallet
+  - USDT
+  - p2p
+blurb: Wallet self-custodial con on/off-ramp directo en bolivianos. Sin bancos de por medio.
+funding: Grant comunidad
+year: '2025'

@@ -1,0 +1,10 @@
+name: lab altiplano
+focus: ZK & privacidad
+city: El Alto
+members: 4
+open: 2
+stack:
+  - Circom
+  - Noir
+  - TS
+lead: S. Quispe
