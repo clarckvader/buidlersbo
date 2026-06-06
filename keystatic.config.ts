@@ -1,12 +1,8 @@
 import { config, collection, singleton, fields } from '@keystatic/core'
 
 export default config({
-  storage: process.env.KEYSTATIC_GITHUB_CLIENT_ID
-    ? {
-        kind: 'github' as const,
-        repo: 'clarckvader/buidlersbo',
-        branchPrefix: 'keystatic/',
-      }
+  storage: process.env.KEYSTATIC_CLOUD_PROJECT
+    ? { kind: 'cloud' as const }
     : { kind: 'local' as const },
 
   ui: {
