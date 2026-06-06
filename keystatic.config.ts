@@ -1,9 +1,7 @@
 import { config, collection, singleton, fields } from '@keystatic/core'
 
 export default config({
-  storage: process.env.KEYSTATIC_CLOUD_PROJECT
-    ? { kind: 'cloud' as const }
-    : { kind: 'local' as const },
+  storage: { kind: 'cloud' as const },
 
   cloud: {
     project: 'buidlers/buidlersbo',
