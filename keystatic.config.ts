@@ -5,6 +5,10 @@ export default config({
     ? { kind: 'cloud' as const }
     : { kind: 'local' as const },
 
+  cloud: {
+    project: 'buidlers/buidlersbo',
+  },
+
   ui: {
     brand: { name: 'buidlers_ bolivia' },
   },
