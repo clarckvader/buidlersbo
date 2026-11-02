@@ -30,17 +30,6 @@ export interface Project {
   funding?: string;
 }
 
-export interface Team {
-  slug: string;
-  name: string;
-  focus: string;
-  city: string;
-  members: number;
-  open: number;
-  stack: string[];
-  lead: string;
-}
-
 export interface CoffeeEvent {
   slug: string;
   d: string;
@@ -53,6 +42,35 @@ export interface CoffeeEvent {
   taken: number;
   tag: string;
   desc: string;
+}
+
+export interface TeamMember {
+  memberId: number | string;
+  username: string | null;
+  name: string | null;
+  avatar: string | null;
+  role: 'owner' | 'member';
+  title: string | null;
+}
+
+export interface ProjectCard {
+  id: number | string;
+  slug: string;
+  name: string;
+  tagline: string;
+  city: string;
+  status: 'idea' | 'construyendo' | 'lanzado';
+  stack: string[];
+  lookingFor: string[];
+  team: TeamMember[];
+}
+
+export interface ProjectPage extends ProjectCard {
+  description: string;
+  category: string;
+  links: string[];
+  isOwner: boolean;
+  isMember: boolean;
 }
 
 export interface Post {

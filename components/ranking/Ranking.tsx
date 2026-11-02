@@ -16,7 +16,11 @@ export function Ranking({ projects }: { projects: Project[] }) {
     <div className="section-pad">
       <div className="rank-wrap">
         <SectionHead index="02" eyebrow="# ranking" title="Proyectos que apoyamos" sub="Pocos, pero reales. Estos son los proyectos que la comunidad acompaña con mentoría, grants y manos a la obra." />
-        <div className="rank-note mono"><span className="dot" /> {projects.length} proyectos activos · curado por la comunidad</div>
+        <div className="rank-note mono"><span className="dot" /> {projects.length} {projects.length === 1 ? 'proyecto destacado' : 'proyectos destacados'} · curado por la comunidad</div>
+
+        {projects.length === 0 && (
+          <div className="empty-state mono">todavía no hay proyectos destacados. los organizadores los eligen entre los proyectos de la comunidad.</div>
+        )}
 
         <div className="top3">
           {top.map((p) => (

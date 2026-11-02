@@ -10,6 +10,7 @@ import {
   inviteMember,
   joinByToken,
   leaveProject,
+  listProjectInvites,
   regenerateInviteToken,
   removeMember,
   updateProject,
@@ -87,6 +88,11 @@ export const Projects: CollectionConfig = {
       handler: memberHandler(async (req, member) => ({
         invite: await inviteMember(req.payload, member, param(req, 'id'), String((await readBody(req)).identifier ?? '')),
       })),
+    },
+    {
+      path: '/:id/invites',
+      method: 'get',
+      handler: memberHandler(async (req, member) => ({ invites: await listProjectInvites(req.payload, member, param(req, 'id')) })),
     },
     {
       path: '/:id/leave',

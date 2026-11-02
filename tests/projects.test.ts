@@ -10,6 +10,7 @@ import {
   inviteMember,
   joinByToken,
   leaveProject,
+  listProjectInvites,
   regenerateInviteToken,
   removeMember,
   respondToInvite,
@@ -155,6 +156,17 @@ describe('invitaciones', () => {
     const invite = await inviteMember(payload, owner, project.id, '@ana')
     await revokeInvite(payload, owner, invite.id)
     await expectServiceError(respondToInvite(payload, other, invite.id, true), 409)
+  })
+})
+
+describe('listProjectInvites', () => {
+  it('el dueño ve las pendientes con el destino; otro → 403', async () => {
+    const project = await createProject(payload, owner, { name: 'Pacha' })
+    await inviteMember(payload, owner, project.id, '@ana')
+    await inviteMember(payload, owner, project.id, 'nuevo@x.com')
+    const list = await listProjectInvites(payload, owner, project.id)
+    expect(list.map((i) => i.target).sort()).toEqual(['@ana', 'nuevo@x.com'])
+    await expectServiceError(listProjectInvites(payload, other, project.id), 403)
   })
 })
 

@@ -63,3 +63,32 @@
   /* Member grid: minimum card width matches viewport */
   .eq-grid { grid-template-columns: 1fr; }
 }
+
+/* ---------- proyectos (directorio, página, invitaciones) ---------- */
+.eq-actions { display: flex; justify-content: flex-end; margin: -12px 0 20px; }
+.empty-state { padding: 40px 24px; border: 1px dashed var(--line-2); border-radius: var(--r); color: var(--ink-mute); font-size: 13px; text-align: center; }
+.link-btn { background: none; border: 0; padding: 0; color: var(--yellow); font-family: var(--mono); font-size: inherit; cursor: pointer; }
+.link-btn:hover:not(:disabled) { text-decoration: underline; }
+.link-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.pj-wrap { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+.pj-back { color: var(--ink-faint); font-size: 13px; }
+.pj-pre { color: var(--ink-mute); font-size: 13px; }
+.pj-pre .y { color: var(--yellow); }
+.pj-meta { display: flex; align-items: center; gap: 10px; color: var(--yellow); font-size: 13px; }
+.pj-title { font-size: clamp(30px, 4vw, 44px); font-weight: 500; letter-spacing: -0.03em; }
+.pj-sub { color: var(--ink-dim); font-size: 17px; margin-top: -8px; }
+.pj-desc { color: var(--ink-dim); line-height: 1.75; white-space: pre-line; }
+.pj-facts { display: flex; flex-direction: column; gap: 16px; }
+.pj-form__row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 560px) { .pj-form__row { grid-template-columns: 1fr; } }
+.pj-link { display: flex; gap: 8px; }
+.pj-link input { flex: 1; min-width: 0; background: var(--bg); border: 1px solid var(--line); border-radius: var(--r); padding: 10px 12px; color: var(--ink); font-family: var(--mono); font-size: 12.5px; }
+.pj-link input:focus { outline: none; border-color: var(--yellow); }
+.pj-hint { font-size: 12px; color: var(--ink-faint); margin: 8px 0 18px; }
+.pj-list { display: flex; flex-direction: column; margin-top: 10px; }
+.pj-list__row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 12.5px; color: var(--ink-dim); }
+.pj-list__row:last-child { border-bottom: 0; }
+.pj-ok { margin-top: 14px; font-size: 12.5px; color: var(--green); }
+.pj-danger { color: var(--red); }
+.pj-leave { font-size: 13px; }
+.pa-member .av { margin-left: 0; }

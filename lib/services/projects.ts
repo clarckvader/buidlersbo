@@ -259,3 +259,21 @@ export async function leaveProject(payload: Payload, member: Member, projectId: 
     overrideAccess: true,
   })
 }
+
+export type PendingInvite = { id: ID; target: string }
+
+// Invitaciones pendientes de un proyecto, para el panel del dueño.
+export async function listProjectInvites(payload: Payload, actor: Member, projectId: ID): Promise<PendingInvite[]> {
+  const project = await getOwnedProject(payload, actor, projectId)
+  const { docs } = await payload.find({
+    collection: 'project-invites',
+    where: { project: { equals: project.id }, status: { equals: 'pending' } },
+    depth: 1,
+    limit: 100,
+    overrideAccess: true,
+  })
+  return docs.map((invite) => {
+    const m = invite.member && typeof invite.member === 'object' ? invite.member : null
+    return { id: invite.id, target: m?.username ? `@${m.username}` : m?.name ?? invite.email ?? '' }
+  })
+}

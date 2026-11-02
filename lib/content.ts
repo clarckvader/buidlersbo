@@ -2,8 +2,8 @@ import { getPayload } from 'payload'
 import { convertLexicalToHTML } from '@payloadcms/richtext-lexical/html'
 import type { SerializedEditorState } from '@payloadcms/richtext-lexical/lexical'
 import config from '@payload-config'
-import type { Event as EventDoc, Post as PostDoc, Team as TeamDoc } from '@/payload-types'
-import type { Post, CoffeeEvent, Team, Project, Value, Stat } from '@/lib/types'
+import type { Event as EventDoc, Member, Post as PostDoc, Project as ProjectDoc } from '@/payload-types'
+import type { Post, CoffeeEvent, Project, Value, Stat, ProjectCard, ProjectPage, TeamMember } from '@/lib/types'
 import { countRegistrations } from '@/lib/services/events'
 
 const payload = () => getPayload({ config })
@@ -85,31 +85,6 @@ export async function getEvent(slug: string): Promise<(CoffeeEvent & { contentHt
   return { ...docToEvent(doc, taken), contentHtml: richTextToHtml(doc.content) }
 }
 
-function docToTeam(doc: TeamDoc): Team {
-  return {
-    slug:    doc.slug,
-    name:    doc.name,
-    focus:   doc.focus ?? '',
-    city:    doc.city ?? '',
-    members: doc.members ?? 0,
-    open:    doc.open ?? 0,
-    stack:   (doc.stack ?? []).map((s) => s.value).filter(Boolean),
-    lead:    doc.lead ?? '',
-  }
-}
-
-export async function getTeams(): Promise<Team[]> {
-  const { docs } = await (await payload()).find({ collection: 'teams', limit: 0, sort: 'createdAt', depth: 0 })
-  return docs.map(docToTeam)
-}
-
-export async function getTeam(slug: string): Promise<Team | null> {
-  const { docs } = await (await payload()).find({ collection: 'teams', where: { slug: { equals: slug } }, limit: 1, depth: 0 })
-  const doc = docs[0]
-  if (!doc) return null
-  return docToTeam(doc)
-}
-
 // Ranking: proyectos que los organizadores marcan como destacados.
 export async function getProjects(): Promise<Project[]> {
   const { docs } = await (await payload()).find({
@@ -136,6 +111,70 @@ export async function getProjects(): Promise<Project[]> {
       year:    doc.year ?? '',
     }
   })
+}
+
+// Equipo de varios proyectos de una vez: dueño primero, luego por antigüedad.
+async function teamsFor(projectIds: (number | string)[]): Promise<Map<string, TeamMember[]>> {
+  const teams = new Map<string, TeamMember[]>(projectIds.map((id) => [String(id), []]))
+  if (!projectIds.length) return teams
+  const { docs } = await (await payload()).find({
+    collection: 'project-members',
+    where: { project: { in: projectIds } },
+    sort: 'createdAt',
+    limit: 0,
+    depth: 1,
+  })
+  for (const row of docs) {
+    const m = typeof row.member === 'object' ? row.member : null
+    const projectId = String(typeof row.project === 'object' ? row.project.id : row.project)
+    teams.get(projectId)?.push({
+      memberId: m?.id ?? (row.member as number),
+      username: m?.username ?? null,
+      name: m?.name ?? null,
+      avatar: m?.avatar ?? null,
+      role: row.role,
+      title: row.title ?? null,
+    })
+  }
+  for (const team of teams.values()) team.sort((a, b) => Number(b.role === 'owner') - Number(a.role === 'owner'))
+  return teams
+}
+
+function docToCard(doc: ProjectDoc, team: TeamMember[]): ProjectCard {
+  return {
+    id:         doc.id,
+    slug:       doc.slug,
+    name:       doc.name,
+    tagline:    doc.tagline ?? '',
+    city:       doc.city ?? '',
+    status:     doc.status,
+    stack:      doc.stack ?? [],
+    lookingFor: doc.lookingFor ?? [],
+    team,
+  }
+}
+
+export async function getProjectDirectory(): Promise<ProjectCard[]> {
+  const { docs } = await (await payload()).find({ collection: 'projects', limit: 0, sort: '-createdAt', depth: 0 })
+  const teams = await teamsFor(docs.map((d) => d.id))
+  return docs.map((doc) => docToCard(doc, teams.get(String(doc.id)) ?? []))
+}
+
+// `viewer`: el miembro de la sesión (o null), para saber si es dueño o integrante.
+export async function getProjectPage(slug: string, viewer: Member | null): Promise<ProjectPage | null> {
+  const { docs } = await (await payload()).find({ collection: 'projects', where: { slug: { equals: slug } }, limit: 1, depth: 0 })
+  const doc = docs[0]
+  if (!doc) return null
+  const team = (await teamsFor([doc.id])).get(String(doc.id)) ?? []
+  const ownerId = typeof doc.owner === 'object' ? doc.owner.id : doc.owner
+  return {
+    ...docToCard(doc, team),
+    description: doc.description ?? '',
+    category:    doc.category ?? '',
+    links:       doc.links ?? [],
+    isOwner:     !!viewer && String(viewer.id) === String(ownerId),
+    isMember:    !!viewer && team.some((m) => String(m.memberId) === String(viewer.id)),
+  }
 }
 
 export async function getSiteData(): Promise<{ values: Value[]; stats: Stat[] }> {

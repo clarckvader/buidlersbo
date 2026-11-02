@@ -70,7 +70,6 @@ export interface Config {
     posts: Post;
     events: Event;
     'event-registrations': EventRegistration;
-    teams: Team;
     projects: Project;
     'project-members': ProjectMember;
     'project-invites': ProjectInvite;
@@ -86,7 +85,6 @@ export interface Config {
     posts: PostsSelect<false> | PostsSelect<true>;
     events: EventsSelect<false> | EventsSelect<true>;
     'event-registrations': EventRegistrationsSelect<false> | EventRegistrationsSelect<true>;
-    teams: TeamsSelect<false> | TeamsSelect<true>;
     projects: ProjectsSelect<false> | ProjectsSelect<true>;
     'project-members': ProjectMembersSelect<false> | ProjectMembersSelect<true>;
     'project-invites': ProjectInvitesSelect<false> | ProjectInvitesSelect<true>;
@@ -260,31 +258,6 @@ export interface Member {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "teams".
- */
-export interface Team {
-  id: number;
-  name: string;
-  /**
-   * Se genera desde "name" si lo dejas vacío.
-   */
-  slug: string;
-  focus?: string | null;
-  city?: string | null;
-  members?: number | null;
-  open?: number | null;
-  stack?:
-    | {
-        value: string;
-        id?: string | null;
-      }[]
-    | null;
-  lead?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "projects".
  */
 export interface Project {
@@ -397,10 +370,6 @@ export interface PayloadLockedDocument {
         value: number | EventRegistration;
       } | null)
     | ({
-        relationTo: 'teams';
-        value: number | Team;
-      } | null)
-    | ({
         relationTo: 'projects';
         value: number | Project;
       } | null)
@@ -504,27 +473,6 @@ export interface EventsSelect<T extends boolean = true> {
 export interface EventRegistrationsSelect<T extends boolean = true> {
   event?: T;
   member?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "teams_select".
- */
-export interface TeamsSelect<T extends boolean = true> {
-  name?: T;
-  slug?: T;
-  focus?: T;
-  city?: T;
-  members?: T;
-  open?: T;
-  stack?:
-    | T
-    | {
-        value?: T;
-        id?: T;
-      };
-  lead?: T;
   updatedAt?: T;
   createdAt?: T;
 }

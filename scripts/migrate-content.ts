@@ -24,11 +24,10 @@ async function readEntries(dir: string, ext: '.yaml' | '.mdoc'): Promise<{ slug:
 }
 
 const day = (v: unknown) => (typeof v === 'string' && v ? `${v}T12:00:00.000Z` : undefined)
-const list = (v: unknown) => (Array.isArray(v) ? v.filter(Boolean).map((value) => ({ value: String(value) })) : [])
 
 const payload = await getPayload({ config })
 
-async function upsert(collection: 'events' | 'teams', slug: string, data: Raw) {
+async function upsert(collection: 'events', slug: string, data: Raw) {
   const { docs } = await payload.find({ collection, where: { slug: { equals: slug } }, limit: 1, depth: 0 })
   if (docs[0]) {
     await payload.update({ collection, id: docs[0].id, data: { ...data, slug } as never })
@@ -44,9 +43,6 @@ for (const { slug, data } of await readEntries('events', '.mdoc')) {
   await upsert('events', slug, { ...event, date: day(data.date) })
 }
 
-for (const { slug, data } of await readEntries('teams', '.yaml')) {
-  await upsert('teams', slug, { ...data, stack: list(data.stack) })
-}
 
 
 const site = parse(await fs.readFile(path.join(CONTENT, 'site.yaml'), 'utf8')) as Raw
