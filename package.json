@@ -11,7 +11,8 @@
     "generate:types": "cross-env NODE_OPTIONS=--no-deprecation payload generate:types",
     "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap",
     "migrate:content": "cross-env NODE_OPTIONS=--no-deprecation payload run scripts/migrate-content.ts",
-    "test": "vitest run"
+    "test": "vitest run",
+    "cleanup:demo": "cross-env NODE_OPTIONS=--no-deprecation payload run scripts/cleanup-demo-content.ts"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "3.92.1",
