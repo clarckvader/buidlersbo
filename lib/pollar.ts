@@ -2,6 +2,14 @@
 // https://docs.pollar.xyz/docs/sdk-reference/server-api
 const POLLAR_API = 'https://server.api.pollar.xyz/v3'
 
+// Pollar no documenta si el email del perfil está verificado. Solo confiamos en él cuando el
+// proveedor lo verifica: Google (OAuth) y el código por email. Ni GitHub ni wallets externas.
+const VERIFIED_EMAIL_PROVIDERS = ['google', 'email']
+
+export function hasVerifiedEmail(authProvider: string | null | undefined): boolean {
+  return !!authProvider && VERIFIED_EMAIL_PROVIDERS.includes(authProvider.trim().toLowerCase())
+}
+
 export type PollarIdentity = {
   userId: string
   email: string | null

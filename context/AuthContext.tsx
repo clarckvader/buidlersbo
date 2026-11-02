@@ -6,6 +6,7 @@ import { usePollar } from '@pollar/react';
 import { User } from '@/lib/types';
 import type { Member } from '@/payload-types';
 import { takeNext } from '@/lib/nextPath';
+import { postLoginRoute } from '@/lib/postLogin';
 
 interface AuthCtx {
   user: User | null;
@@ -87,15 +88,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => { cancelled = true; };
   }, [isAuthenticated, verified, getClient]);
 
-  // Sin @usuario → bienvenida (en cualquier página). Con @usuario, solo tras un login nuevo → panel.
+  // Sin @usuario → bienvenida (en cualquier página). Con @usuario, solo tras un login nuevo → destino o panel.
   useEffect(() => {
     if (!member) return;
-    if (!member.username) {
-      if (pathname !== '/bienvenida') router.push('/bienvenida');
-    } else if (justLoggedIn) {
-      setJustLoggedIn(false);
-      router.push(takeNext() ?? '/participante');
-    }
+    const hasUsername = !!member.username;
+    const next = hasUsername && justLoggedIn ? takeNext() : null;
+    const { to, consumeLogin } = postLoginRoute({ hasUsername, justLoggedIn, pathname, next });
+    if (consumeLogin) setJustLoggedIn(false);
+    if (to) router.push(to);
   }, [member, justLoggedIn, pathname, router]);
 
   const user = useMemo<User | null>(() => {

@@ -11,6 +11,7 @@ import {
   joinByToken,
   leaveProject,
   listProjectInvites,
+  previewByToken,
   regenerateInviteToken,
   removeMember,
   respondToInvite,
@@ -60,6 +61,21 @@ describe('createProject', () => {
   })
 })
 
+describe('links del proyecto', () => {
+  it('no recorta URLs largas y completa https:// si falta', async () => {
+    const long = 'https://github.com/buidlers-bolivia/pacha-id/tree/main/packages/contracts/src/identity'
+    const project = await createProject(payload, owner, { name: 'Pacha', links: [long, 'github.com/x/pacha'] })
+    expect(project.links).toEqual([long, 'https://github.com/x/pacha'])
+  })
+
+  it('rechaza un link inválido nombrándolo', async () => {
+    const err = await createProject(payload, owner, { name: 'Pacha', links: ['javascript:alert(1)'] }).then(() => null, (e) => e)
+    expect(err).toBeInstanceOf(ServiceError)
+    expect((err as ServiceError).status).toBe(400)
+    expect((err as ServiceError).message).toContain('javascript:alert(1)')
+  })
+})
+
 describe('permisos del dueño', () => {
   it('solo el dueño edita', async () => {
     const project = await createProject(payload, owner, { name: 'Pacha' })
@@ -95,6 +111,17 @@ describe('joinByToken', () => {
   })
 })
 
+describe('previewByToken', () => {
+  it('devuelve datos públicos del proyecto, o null si el enlace no sirve', async () => {
+    const project = await createProject(payload, owner, { name: 'Pacha ID', tagline: 'identidad' })
+    const token = await getInviteToken(payload, owner, project.id)
+    expect(await previewByToken(payload, token)).toEqual({ name: 'Pacha ID', slug: 'pacha-id', tagline: 'identidad' })
+    await regenerateInviteToken(payload, owner, project.id)
+    expect(await previewByToken(payload, token)).toBeNull()
+    expect(await previewByToken(payload, '')).toBeNull()
+  })
+})
+
 describe('invitaciones', () => {
   it('por @usuario y por email', async () => {
     const project = await createProject(payload, owner, { name: 'Pacha' })
@@ -118,14 +145,33 @@ describe('invitaciones', () => {
     expect(invite.member).toBe(other.id)
   })
 
+  it('encuentra al miembro exacto aunque muchos emails lo contengan', async () => {
+    for (let i = 0; i < 25; i++) await createMember(payload, { email: `juli${i}ana@x.com` })
+    const project = await createProject(payload, owner, { name: 'Pacha' })
+    const invite = await inviteMember(payload, owner, project.id, 'ana@x.com')
+    expect(invite.member).toBe(other.id)
+  })
+
+  it('el email del miembro se guarda normalizado', async () => {
+    const m = await createMember(payload, { email: ' Mixto@X.com ' as string })
+    expect(m.email).toBe('mixto@x.com')
+  })
+
   it('claimEmailInvites asocia por correo y aceptar lo une', async () => {
     const project = await createProject(payload, owner, { name: 'Pacha' })
     await inviteMember(payload, owner, project.id, 'nuevo@x.com')
-    const nuevo = await createMember(payload, { email: 'NUEVO@x.com' })
+    const nuevo = await createMember(payload, { email: 'NUEVO@x.com', authProvider: 'google' })
     expect(await claimEmailInvites(payload, nuevo)).toBe(1)
     const { docs } = await payload.find({ collection: 'project-invites', where: { member: { equals: nuevo.id } }, overrideAccess: true })
     await respondToInvite(payload, nuevo, docs[0].id, true)
     expect((await teamOf(project.id)).some((m) => m.member === nuevo.id)).toBe(true)
+  })
+
+  it('claimEmailInvites no confía en emails de proveedores no verificados', async () => {
+    const project = await createProject(payload, owner, { name: 'Pacha' })
+    await inviteMember(payload, owner, project.id, 'nuevo@x.com')
+    const wallet = await createMember(payload, { email: 'nuevo@x.com', authProvider: 'wallet' })
+    expect(await claimEmailInvites(payload, wallet)).toBe(0)
   })
 
   it('invitar a un integrante → 409; responder por otro → 403', async () => {

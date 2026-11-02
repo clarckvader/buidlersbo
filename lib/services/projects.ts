@@ -3,8 +3,9 @@
 import { randomBytes } from 'crypto'
 import type { Payload, RequiredDataFromCollectionSlug, Where } from 'payload'
 import type { Member, Project, ProjectInvite } from '../../payload-types'
-import { LIMITS, PROJECT_STATUS, cleanLinks, cleanList, type ProjectStatus } from '../profile'
+import { LIMITS, PROJECT_STATUS, checkLinks, cleanList, type ProjectStatus } from '../profile'
 import { slugify } from '../slugify'
+import { hasVerifiedEmail } from '../pollar'
 
 export class ServiceError extends Error {
   constructor(public status: number, message: string) {
@@ -49,7 +50,11 @@ function sanitize(input: Partial<ProjectInput>): Partial<ProjectInput> {
   }
   if ('stack' in input) out.stack = cleanList(input.stack, LIMITS.stack) ?? []
   if ('lookingFor' in input) out.lookingFor = cleanList(input.lookingFor, LIMITS.lookingFor) ?? []
-  if ('links' in input) out.links = cleanLinks(input.links)
+  if ('links' in input) {
+    const { links, invalid } = checkLinks(input.links)
+    if (invalid.length) throw new ServiceError(400, `Link inválido: ${invalid[0]}`)
+    out.links = links
+  }
   return out
 }
 
@@ -135,11 +140,20 @@ export async function regenerateInviteToken(payload: Payload, actor: Member, pro
   return token
 }
 
+async function findByToken(payload: Payload, token: string): Promise<Project | null> {
+  if (!token) return null
+  const { docs } = await payload.find({ collection: 'projects', where: { inviteToken: { equals: token } }, limit: 1, depth: 0, overrideAccess: true })
+  return docs[0] ?? null
+}
+
+// Datos públicos del proyecto de un enlace (para mostrar "Unirte a X" antes de aceptar). Nunca el token.
+export async function previewByToken(payload: Payload, token: string): Promise<{ name: string; slug: string; tagline: string } | null> {
+  const project = await findByToken(payload, token)
+  return project ? { name: project.name, slug: project.slug, tagline: project.tagline ?? '' } : null
+}
+
 export async function joinByToken(payload: Payload, member: Member, token: string): Promise<Project> {
-  const { docs } = token
-    ? await payload.find({ collection: 'projects', where: { inviteToken: { equals: token } }, limit: 1, depth: 0, overrideAccess: true })
-    : { docs: [] }
-  const project = docs[0]
+  const project = await findByToken(payload, token)
   if (!project) throw new ServiceError(404, 'Este enlace ya no es válido')
   await ensureMembership(payload, project.id, member.id, 'member')
   return project
@@ -190,14 +204,15 @@ export async function inviteMember(payload: Payload, actor: Member, projectId: I
   })
 }
 
-// Los correos de miembros vienen de Pollar con mayúsculas variables: se compara normalizado.
+// `members.email` se guarda normalizado (hook del campo), así que basta igualdad exacta.
 async function findMemberByEmail(payload: Payload, email: string): Promise<Member | null> {
-  const { docs } = await payload.find({ collection: 'members', where: { email: { like: email } }, limit: 20, depth: 0, overrideAccess: true })
-  return docs.find((m) => m.email && normalizeEmail(m.email) === email) ?? null
+  const { docs } = await payload.find({ collection: 'members', where: { email: { equals: email } }, limit: 1, depth: 0, overrideAccess: true })
+  return docs[0] ?? null
 }
 
 export async function claimEmailInvites(payload: Payload, member: Member): Promise<number> {
-  if (!member.email) return 0
+  // Solo con email verificado por el proveedor: si no, cualquiera podría reclamar invitaciones ajenas.
+  if (!member.email || !hasVerifiedEmail(member.authProvider)) return 0
   const { docs } = await payload.find({
     collection: 'project-invites',
     where: { email: { equals: normalizeEmail(member.email) }, member: { exists: false }, status: { equals: 'pending' } },
@@ -216,7 +231,8 @@ export async function respondToInvite(payload: Payload, member: Member, inviteId
   if (!invite) throw new ServiceError(404, 'Invitación no encontrada')
   const forMe =
     sameId(idOf(invite.member), member.id) ||
-    (!invite.member && !!invite.email && !!member.email && normalizeEmail(member.email) === invite.email)
+    (!invite.member && !!invite.email && !!member.email && hasVerifiedEmail(member.authProvider) &&
+      normalizeEmail(member.email) === invite.email)
   if (!forMe) throw new ServiceError(403, 'Esta invitación no es para ti')
   if (invite.status !== 'pending') throw new ServiceError(409, 'Esta invitación ya no está vigente')
 

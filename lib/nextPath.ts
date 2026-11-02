@@ -4,9 +4,17 @@ type KV = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>
 
 const KEY = 'buidlers:next'
 
+// Se valida resolviendo la URL (no por prefijo): el parser ignora tabs/saltos y trata `\` como `/`,
+// así que '/\t/evil.com' sería https://evil.com. Si el origen cambia, se rechaza.
 export function safeNextPath(path: string | null | undefined): string | null {
-  if (!path || !path.startsWith('/') || path.startsWith('//') || path.startsWith('/\\')) return null
-  return path
+  if (!path || !path.startsWith('/')) return null
+  const base = 'https://next.invalid'
+  try {
+    const url = new URL(path, base)
+    return url.origin === base ? url.pathname + url.search + url.hash : null
+  } catch {
+    return null
+  }
 }
 
 function session(): KV | null {

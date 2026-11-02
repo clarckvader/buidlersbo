@@ -24,15 +24,21 @@ describe('access', () => {
 
 describe('applyAdminBootstrap', () => {
   it('promueve a admin si el email está en la lista (sin mayúsculas ni espacios)', () => {
-    expect(applyAdminBootstrap({ email: ' Roberto@X.com ', role: 'member' }, 'roberto@x.com, otro@y.com')).toBe('admin')
+    expect(applyAdminBootstrap({ email: ' Roberto@X.com ', role: 'member', authProvider: 'google' }, 'roberto@x.com, otro@y.com')).toBe('admin')
+    expect(applyAdminBootstrap({ email: 'roberto@x.com', role: null, authProvider: 'EMAIL' }, 'roberto@x.com')).toBe('admin')
+  })
+
+  it('no confía en emails de proveedores que no los verifican', () => {
+    expect(applyAdminBootstrap({ email: 'roberto@x.com', role: 'member', authProvider: 'github' }, 'roberto@x.com')).toBe('member')
+    expect(applyAdminBootstrap({ email: 'roberto@x.com', role: null, authProvider: null }, 'roberto@x.com')).toBe('member')
   })
 
   it('mantiene el rol existente si el email no está en la lista', () => {
-    expect(applyAdminBootstrap({ email: 'ana@x.com', role: 'organizer' }, 'roberto@x.com')).toBe('organizer')
+    expect(applyAdminBootstrap({ email: 'ana@x.com', role: 'organizer', authProvider: 'google' }, 'roberto@x.com')).toBe('organizer')
   })
 
   it('sin rol previo ni lista, queda member', () => {
-    expect(applyAdminBootstrap({ email: null, role: null }, '')).toBe('member')
+    expect(applyAdminBootstrap({ email: null, role: null, authProvider: null }, '')).toBe('member')
   })
 })
 

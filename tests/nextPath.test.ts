@@ -23,6 +23,10 @@ describe('nextPath', () => {
     expect(safeNextPath('//evil.com')).toBeNull()
     expect(safeNextPath('/\\evil.com')).toBeNull()
     expect(safeNextPath('/admin')).toBe('/admin')
+    // El parser de URL elimina tabs y saltos de línea: '/\t/evil.com' → https://evil.com
+    expect(safeNextPath('/\t/evil.com')).toBeNull()
+    expect(safeNextPath('/\n/evil.com')).toBeNull()
+    expect(safeNextPath('/proyectos/x?ref=1#equipo')).toBe('/proyectos/x?ref=1#equipo')
   })
 
   it('no guarda destinos externos', () => {

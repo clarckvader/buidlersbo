@@ -1,5 +1,5 @@
 import { APIError, type CollectionConfig, type PayloadRequest } from 'payload'
-import { verifyPollarToken } from '../lib/pollar'
+import { hasVerifiedEmail, verifyPollarToken } from '../lib/pollar'
 import { claimEmailInvites } from '../lib/services/projects'
 import { getSessionMember, memberCookie, signMemberSession } from '../lib/memberSession'
 import { isAdmin, isAdminField, isStaff, isStaffUser, type Role } from './access'
@@ -7,15 +7,15 @@ import { INTERESTS, LIMITS, ROLES, USERNAME_RE, cleanLinks, cleanList } from '..
 
 const pick = <T extends string>(v: unknown, allowed: readonly T[]) => cleanList(v, allowed.length)?.filter((x): x is T => (allowed as readonly string[]).includes(x))
 
-// Primer admin: emails en ADMIN_EMAILS (separados por comas) quedan como admin al iniciar sesión.
-// Nunca baja un rol existente.
+// Primer admin: emails en ADMIN_EMAILS (separados por comas) quedan como admin al iniciar sesión,
+// solo si el proveedor verifica el email. Nunca baja un rol existente.
 export function applyAdminBootstrap(
-  member: { email?: string | null; role?: string | null },
+  member: { email?: string | null; role?: string | null; authProvider?: string | null },
   list: string = process.env.ADMIN_EMAILS ?? '',
 ): Role {
   const normalize = (e: string) => e.trim().toLowerCase()
   const admins = list.split(',').map(normalize).filter(Boolean)
-  if (member.email && admins.includes(normalize(member.email))) return 'admin'
+  if (member.email && hasVerifiedEmail(member.authProvider) && admins.includes(normalize(member.email))) return 'admin'
   return (member.role as Role) || 'member'
 }
 
@@ -96,7 +96,7 @@ export const Members: CollectionConfig = {
           overrideAccess: true,
         })
         const data = {
-          role: applyAdminBootstrap({ email: identity.email, role: docs[0]?.role }),
+          role: applyAdminBootstrap({ email: identity.email, role: docs[0]?.role, authProvider: identity.authProvider }),
           pollarUserId: identity.userId,
           email: identity.email,
           name: identity.name,
@@ -181,7 +181,13 @@ export const Members: CollectionConfig = {
     },
     { name: 'username', type: 'text', label: '@usuario', unique: true, index: true },
     { name: 'name', type: 'text', label: 'Nombre' },
-    { name: 'email', type: 'email', label: 'Email' },
+    {
+      name: 'email',
+      type: 'email',
+      label: 'Email',
+      // Normalizado para buscar invitaciones por correo con igualdad exacta.
+      hooks: { beforeValidate: [({ value }) => (typeof value === 'string' ? value.trim().toLowerCase() || null : value)] },
+    },
     { name: 'avatar', type: 'text', label: 'Avatar (URL)', admin: { readOnly: true } },
     { name: 'wallet', type: 'text', label: 'Wallet', admin: { readOnly: true } },
     { name: 'authProvider', type: 'text', label: 'Proveedor', admin: { readOnly: true } },
