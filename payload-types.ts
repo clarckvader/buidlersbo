@@ -69,6 +69,7 @@ export interface Config {
   collections: {
     posts: Post;
     events: Event;
+    'event-registrations': EventRegistration;
     teams: Team;
     projects: Project;
     'project-members': ProjectMember;
@@ -84,6 +85,7 @@ export interface Config {
   collectionsSelect: {
     posts: PostsSelect<false> | PostsSelect<true>;
     events: EventsSelect<false> | EventsSelect<true>;
+    'event-registrations': EventRegistrationsSelect<false> | EventRegistrationsSelect<true>;
     teams: TeamsSelect<false> | TeamsSelect<true>;
     projects: ProjectsSelect<false> | ProjectsSelect<true>;
     'project-members': ProjectMembersSelect<false> | ProjectMembersSelect<true>;
@@ -183,8 +185,10 @@ export interface Event {
   type: 'Meetup' | 'Hackathon' | 'Taller' | 'Conferencia';
   city?: string | null;
   place?: string | null;
+  /**
+   * Los inscritos se cuentan solos.
+   */
   cap?: number | null;
-  taken?: number | null;
   tag?: string | null;
   desc?: string | null;
   content?: {
@@ -204,6 +208,55 @@ export interface Event {
   } | null;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "event-registrations".
+ */
+export interface EventRegistration {
+  id: number;
+  event: number | Event;
+  member: number | Member;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "members".
+ */
+export interface Member {
+  id: number;
+  pollarUserId: string;
+  role: 'admin' | 'organizer' | 'member';
+  username?: string | null;
+  name?: string | null;
+  email?: string | null;
+  avatar?: string | null;
+  wallet?: string | null;
+  authProvider?: string | null;
+  lastLoginAt?: string | null;
+  roles?: ('Desarrollo' | 'Diseño' | 'Producto' | 'Comunidad' | 'Investigación' | 'Negocios' | 'Estudiante')[] | null;
+  interests?:
+    | (
+        | 'DeFi'
+        | 'Pagos'
+        | 'Identidad'
+        | 'ZK'
+        | 'DAOs'
+        | 'Infraestructura'
+        | 'RWA'
+        | 'NFTs & cultura'
+        | 'Educación'
+        | 'IA'
+      )[]
+    | null;
+  stack?: string[] | null;
+  building?: string | null;
+  links?: string[] | null;
+  onboardedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  collection: 'members';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -260,44 +313,6 @@ export interface Project {
   inviteToken?: string | null;
   updatedAt: string;
   createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "members".
- */
-export interface Member {
-  id: number;
-  pollarUserId: string;
-  role: 'admin' | 'organizer' | 'member';
-  username?: string | null;
-  name?: string | null;
-  email?: string | null;
-  avatar?: string | null;
-  wallet?: string | null;
-  authProvider?: string | null;
-  lastLoginAt?: string | null;
-  roles?: ('Desarrollo' | 'Diseño' | 'Producto' | 'Comunidad' | 'Investigación' | 'Negocios' | 'Estudiante')[] | null;
-  interests?:
-    | (
-        | 'DeFi'
-        | 'Pagos'
-        | 'Identidad'
-        | 'ZK'
-        | 'DAOs'
-        | 'Infraestructura'
-        | 'RWA'
-        | 'NFTs & cultura'
-        | 'Educación'
-        | 'IA'
-      )[]
-    | null;
-  stack?: string[] | null;
-  building?: string | null;
-  links?: string[] | null;
-  onboardedAt?: string | null;
-  updatedAt: string;
-  createdAt: string;
-  collection: 'members';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -376,6 +391,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'events';
         value: number | Event;
+      } | null)
+    | ({
+        relationTo: 'event-registrations';
+        value: number | EventRegistration;
       } | null)
     | ({
         relationTo: 'teams';
@@ -472,10 +491,19 @@ export interface EventsSelect<T extends boolean = true> {
   city?: T;
   place?: T;
   cap?: T;
-  taken?: T;
   tag?: T;
   desc?: T;
   content?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "event-registrations_select".
+ */
+export interface EventRegistrationsSelect<T extends boolean = true> {
+  event?: T;
+  member?: T;
   updatedAt?: T;
   createdAt?: T;
 }

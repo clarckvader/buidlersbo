@@ -4,6 +4,7 @@ import type { SerializedEditorState } from '@payloadcms/richtext-lexical/lexical
 import config from '@payload-config'
 import type { Event as EventDoc, Post as PostDoc, Team as TeamDoc } from '@/payload-types'
 import type { Post, CoffeeEvent, Team, Project, Value, Stat } from '@/lib/types'
+import { countRegistrations } from '@/lib/services/events'
 
 const payload = () => getPayload({ config })
 
@@ -50,7 +51,7 @@ export async function getPost(slug: string): Promise<(Post & { contentHtml: stri
   return { ...docToPost(doc), contentHtml: richTextToHtml(doc.content) }
 }
 
-function docToEvent(doc: EventDoc): CoffeeEvent {
+function docToEvent(doc: EventDoc, taken: number): CoffeeEvent {
   const iso = toIsoDay(doc.date)
   const [, m, d] = iso.split('-')
   return {
@@ -62,22 +63,26 @@ function docToEvent(doc: EventDoc): CoffeeEvent {
     city:  doc.city ?? '',
     place: doc.place ?? '',
     cap:   doc.cap ?? 0,
-    taken: doc.taken ?? 0,
+    taken,
     tag:   doc.tag ?? '',
     desc:  doc.desc ?? '',
   }
 }
 
 export async function getEvents(): Promise<CoffeeEvent[]> {
-  const { docs } = await (await payload()).find({ collection: 'events', limit: 0, sort: 'date', depth: 0 })
-  return docs.map(docToEvent)
+  const p = await payload()
+  const { docs } = await p.find({ collection: 'events', limit: 0, sort: 'date', depth: 0 })
+  const counts = await countRegistrations(p, docs.map((d) => d.id))
+  return docs.map((doc) => docToEvent(doc, counts.get(String(doc.id)) ?? 0))
 }
 
 export async function getEvent(slug: string): Promise<(CoffeeEvent & { contentHtml: string }) | null> {
-  const { docs } = await (await payload()).find({ collection: 'events', where: { slug: { equals: slug } }, limit: 1, depth: 1 })
+  const p = await payload()
+  const { docs } = await p.find({ collection: 'events', where: { slug: { equals: slug } }, limit: 1, depth: 1 })
   const doc = docs[0]
   if (!doc) return null
-  return { ...docToEvent(doc), contentHtml: richTextToHtml(doc.content) }
+  const taken = (await countRegistrations(p, [doc.id])).get(String(doc.id)) ?? 0
+  return { ...docToEvent(doc, taken), contentHtml: richTextToHtml(doc.content) }
 }
 
 function docToTeam(doc: TeamDoc): Team {

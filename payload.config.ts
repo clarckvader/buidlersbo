@@ -9,6 +9,7 @@ import { Members } from './collections/Members'
 import { Media } from './collections/Media'
 import { Posts } from './collections/Posts'
 import { Events } from './collections/Events'
+import { EventRegistrations } from './collections/EventRegistrations'
 import { Teams } from './collections/Teams'
 import { Projects } from './collections/Projects'
 import { ProjectMembers } from './collections/ProjectMembers'
@@ -27,7 +28,7 @@ export default buildConfig({
     meta: { titleSuffix: ' — buidlers_ bolivia' },
     importMap: { baseDir: path.resolve(dirname) },
   },
-  collections: [Posts, Events, Teams, Projects, ProjectMembers, ProjectInvites, Members, Media],
+  collections: [Posts, Events, EventRegistrations, Teams, Projects, ProjectMembers, ProjectInvites, Members, Media],
   globals: [Site],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',

@@ -40,7 +40,8 @@ async function upsert(collection: 'events' | 'teams', slug: string, data: Raw) {
 }
 
 for (const { slug, data } of await readEntries('events', '.mdoc')) {
-  await upsert('events', slug, { ...data, date: day(data.date) })
+  const { taken: _taken, ...event } = data
+  await upsert('events', slug, { ...event, date: day(data.date) })
 }
 
 for (const { slug, data } of await readEntries('teams', '.yaml')) {
