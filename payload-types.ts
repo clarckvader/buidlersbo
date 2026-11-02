@@ -71,6 +71,8 @@ export interface Config {
     events: Event;
     teams: Team;
     projects: Project;
+    'project-members': ProjectMember;
+    'project-invites': ProjectInvite;
     members: Member;
     media: Media;
     'payload-kv': PayloadKv;
@@ -84,6 +86,8 @@ export interface Config {
     events: EventsSelect<false> | EventsSelect<true>;
     teams: TeamsSelect<false> | TeamsSelect<true>;
     projects: ProjectsSelect<false> | ProjectsSelect<true>;
+    'project-members': ProjectMembersSelect<false> | ProjectMembersSelect<true>;
+    'project-invites': ProjectInvitesSelect<false> | ProjectInvitesSelect<true>;
     members: MembersSelect<false> | MembersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -237,22 +241,23 @@ export interface Project {
    * Se genera desde "name" si lo dejas vacío.
    */
   slug: string;
+  tagline?: string | null;
+  description?: string | null;
+  category?: string | null;
+  city?: string | null;
+  status: 'idea' | 'construyendo' | 'lanzado';
+  stack?: string[] | null;
+  lookingFor?: string[] | null;
+  links?: string[] | null;
+  owner: number | Member;
+  featured?: boolean | null;
   rank?: number | null;
-  cat?: string | null;
-  builder?: string | null;
-  loc?: string | null;
   metric?: string | null;
-  metricL?: string | null;
+  metricLabel?: string | null;
   delta?: string | null;
-  tags?:
-    | {
-        value: string;
-        id?: string | null;
-      }[]
-    | null;
-  blurb?: string | null;
   funding?: string | null;
   year?: string | null;
+  inviteToken?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -293,6 +298,33 @@ export interface Member {
   updatedAt: string;
   createdAt: string;
   collection: 'members';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "project-members".
+ */
+export interface ProjectMember {
+  id: number;
+  project: number | Project;
+  member: number | Member;
+  role: 'owner' | 'member';
+  title?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "project-invites".
+ */
+export interface ProjectInvite {
+  id: number;
+  project: number | Project;
+  invitedBy: number | Member;
+  member?: (number | null) | Member;
+  email?: string | null;
+  status: 'pending' | 'accepted' | 'declined' | 'revoked';
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -352,6 +384,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'projects';
         value: number | Project;
+      } | null)
+    | ({
+        relationTo: 'project-members';
+        value: number | ProjectMember;
+      } | null)
+    | ({
+        relationTo: 'project-invites';
+        value: number | ProjectInvite;
       } | null)
     | ({
         relationTo: 'members';
@@ -467,22 +507,48 @@ export interface TeamsSelect<T extends boolean = true> {
 export interface ProjectsSelect<T extends boolean = true> {
   name?: T;
   slug?: T;
+  tagline?: T;
+  description?: T;
+  category?: T;
+  city?: T;
+  status?: T;
+  stack?: T;
+  lookingFor?: T;
+  links?: T;
+  owner?: T;
+  featured?: T;
   rank?: T;
-  cat?: T;
-  builder?: T;
-  loc?: T;
   metric?: T;
-  metricL?: T;
+  metricLabel?: T;
   delta?: T;
-  tags?:
-    | T
-    | {
-        value?: T;
-        id?: T;
-      };
-  blurb?: T;
   funding?: T;
   year?: T;
+  inviteToken?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "project-members_select".
+ */
+export interface ProjectMembersSelect<T extends boolean = true> {
+  project?: T;
+  member?: T;
+  role?: T;
+  title?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "project-invites_select".
+ */
+export interface ProjectInvitesSelect<T extends boolean = true> {
+  project?: T;
+  invitedBy?: T;
+  member?: T;
+  email?: T;
+  status?: T;
   updatedAt?: T;
   createdAt?: T;
 }

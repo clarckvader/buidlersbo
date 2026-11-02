@@ -105,22 +105,32 @@ export async function getTeam(slug: string): Promise<Team | null> {
   return docToTeam(doc)
 }
 
+// Ranking: proyectos que los organizadores marcan como destacados.
 export async function getProjects(): Promise<Project[]> {
-  const { docs } = await (await payload()).find({ collection: 'projects', limit: 0, sort: 'rank', depth: 0 })
-  return docs.map((doc) => ({
-    name:    doc.name,
-    rank:    doc.rank ?? 0,
-    cat:     doc.cat ?? '',
-    builder: doc.builder ?? '',
-    loc:     doc.loc ?? '',
-    metric:  doc.metric ?? '',
-    metricL: doc.metricL ?? '',
-    delta:   doc.delta ?? '+0',
-    tags:    (doc.tags ?? []).map((t) => t.value).filter(Boolean),
-    blurb:   doc.blurb ?? '',
-    funding: doc.funding ?? '',
-    year:    doc.year ?? '',
-  }))
+  const { docs } = await (await payload()).find({
+    collection: 'projects',
+    where: { featured: { equals: true } },
+    limit: 0,
+    sort: 'rank',
+    depth: 1,
+  })
+  return docs.map((doc) => {
+    const owner = typeof doc.owner === 'object' ? doc.owner : null
+    return {
+      name:    doc.name,
+      rank:    doc.rank ?? 0,
+      cat:     doc.category ?? '',
+      builder: owner?.username ? `@${owner.username}` : owner?.name ?? '',
+      loc:     doc.city ?? '',
+      metric:  doc.metric ?? '',
+      metricL: doc.metricLabel ?? '',
+      delta:   doc.delta ?? '',
+      tags:    doc.stack ?? [],
+      blurb:   doc.tagline ?? '',
+      funding: doc.funding ?? '',
+      year:    doc.year ?? '',
+    }
+  })
 }
 
 export async function getSiteData(): Promise<{ values: Value[]; stats: Stat[] }> {

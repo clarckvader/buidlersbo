@@ -2,12 +2,8 @@ import type { CollectionConfig, PayloadRequest } from 'payload'
 import { verifyPollarToken } from '../lib/pollar'
 import { getSessionMember, memberCookie, signMemberSession } from '../lib/memberSession'
 import { isAdmin, isAdminField, isStaff, isStaffUser, type Role } from './access'
-import { INTERESTS, LIMITS, ROLES, USERNAME_RE } from '../lib/profile'
+import { INTERESTS, LIMITS, ROLES, USERNAME_RE, cleanLinks, cleanList } from '../lib/profile'
 
-const cleanList = (v: unknown, max: number) =>
-  Array.isArray(v)
-    ? [...new Set(v.filter((x): x is string => typeof x === 'string').map((x) => x.trim().slice(0, LIMITS.item)).filter(Boolean))].slice(0, max)
-    : undefined
 const pick = <T extends string>(v: unknown, allowed: readonly T[]) => cleanList(v, allowed.length)?.filter((x): x is T => (allowed as readonly string[]).includes(x))
 
 // Primer admin: emails en ADMIN_EMAILS (separados por comas) quedan como admin al iniciar sesión.
@@ -130,7 +126,7 @@ export const Members: CollectionConfig = {
         if ('interests' in body) data.interests = pick(body.interests, INTERESTS) ?? []
         if ('stack' in body) data.stack = cleanList(body.stack, LIMITS.stack) ?? []
         if ('links' in body) {
-          data.links = (cleanList(body.links, LIMITS.links) ?? []).filter((l) => /^https?:\/\/\S+$/.test(l))
+          data.links = cleanLinks(body.links)
         }
         if ('building' in body) data.building = String(body.building ?? '').trim().slice(0, LIMITS.building)
         if (body.finishOnboarding === true && !me.onboardedAt) data.onboardedAt = new Date().toISOString()

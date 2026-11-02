@@ -20,4 +20,13 @@ export function suggestUsername(name: string | null | undefined): string {
 }
 
 // Límites para lo que llega del cliente.
-export const LIMITS = { stack: 15, links: 5, item: 60, building: 500 }
+export const LIMITS = { stack: 15, links: 5, item: 60, building: 500, name: 80, tagline: 140, description: 2000, lookingFor: 10 }
+
+// Lista de strings saneada: recorta, quita vacíos y duplicados, limita cantidad. undefined si no es lista.
+export const cleanList = (v: unknown, max: number): string[] | undefined =>
+  Array.isArray(v)
+    ? [...new Set(v.filter((x): x is string => typeof x === 'string').map((x) => x.trim().slice(0, LIMITS.item)).filter(Boolean))].slice(0, max)
+    : undefined
+
+export const cleanLinks = (v: unknown): string[] =>
+  (cleanList(v, LIMITS.links) ?? []).filter((l) => /^https?:\/\/\S+$/.test(l))
