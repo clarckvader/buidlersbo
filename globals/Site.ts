@@ -1,10 +1,10 @@
 import type { GlobalConfig } from 'payload'
-import { isAdmin } from '../collections/access'
+import { isStaff } from '../collections/access'
 
 export const Site: GlobalConfig = {
   slug: 'site',
   label: 'Sitio — valores y stats',
-  access: { read: () => true, update: isAdmin },
+  access: { read: () => true, update: isStaff },
   fields: [
     {
       name: 'values',

@@ -1,7 +1,7 @@
 import type { CollectionConfig, PayloadRequest } from 'payload'
 import { verifyPollarToken } from '../lib/pollar'
 import { getSessionMember, memberCookie, signMemberSession } from '../lib/memberSession'
-import { isAdmin } from './access'
+import { isAdmin, isAdminField, isStaff, isStaffUser, type Role } from './access'
 import { INTERESTS, LIMITS, ROLES, USERNAME_RE } from '../lib/profile'
 
 const cleanList = (v: unknown, max: number) =>
@@ -9,6 +9,18 @@ const cleanList = (v: unknown, max: number) =>
     ? [...new Set(v.filter((x): x is string => typeof x === 'string').map((x) => x.trim().slice(0, LIMITS.item)).filter(Boolean))].slice(0, max)
     : undefined
 const pick = <T extends string>(v: unknown, allowed: readonly T[]) => cleanList(v, allowed.length)?.filter((x): x is T => (allowed as readonly string[]).includes(x))
+
+// Primer admin: emails en ADMIN_EMAILS (separados por comas) quedan como admin al iniciar sesión.
+// Nunca baja un rol existente.
+export function applyAdminBootstrap(
+  member: { email?: string | null; role?: string | null },
+  list: string = process.env.ADMIN_EMAILS ?? '',
+): Role {
+  const normalize = (e: string) => e.trim().toLowerCase()
+  const admins = list.split(',').map(normalize).filter(Boolean)
+  if (member.email && admins.includes(normalize(member.email))) return 'admin'
+  return (member.role as Role) || 'member'
+}
 
 async function usernameTaken(req: PayloadRequest, username: string, exceptId?: number | string) {
   const { docs } = await req.payload.find({
@@ -26,9 +38,21 @@ export const Members: CollectionConfig = {
   slug: 'members',
   labels: { singular: 'Miembro', plural: 'Miembros' },
   admin: { useAsTitle: 'name', defaultColumns: ['name', 'username', 'email', 'lastLoginAt'] },
-  // No es una colección `auth` de Payload: la sesión de miembro (cookie propia) no debe
-  // mezclarse con la de los admins del panel. Solo los admins leen/escriben por la API.
-  access: { read: isAdmin, create: isAdmin, update: isAdmin, delete: isAdmin },
+  // Es la colección de usuarios del panel: se autentica con la cookie de miembro (login de Pollar),
+  // sin contraseña. Solo staff entra a /admin; solo admins gestionan miembros y roles.
+  auth: {
+    disableLocalStrategy: true,
+    strategies: [
+      {
+        name: 'pollar-session',
+        authenticate: async ({ payload, headers }) => {
+          const member = await getSessionMember(payload, headers)
+          return { user: member ? { ...member, collection: 'members' as const, _strategy: 'pollar-session' } : null }
+        },
+      },
+    ],
+  },
+  access: { admin: ({ req }) => isStaffUser(req.user), read: isStaff, create: isAdmin, update: isAdmin, delete: isAdmin },
   endpoints: [
     {
       // Miembro de la sesión actual (o null).
@@ -48,7 +72,15 @@ export const Members: CollectionConfig = {
         const identity = await verifyPollarToken(token)
         if (!identity) return Response.json({ error: 'Token de Pollar inválido' }, { status: 401 })
 
+        const { docs } = await req.payload.find({
+          collection: 'members',
+          where: { pollarUserId: { equals: identity.userId } },
+          limit: 1,
+          depth: 0,
+          overrideAccess: true,
+        })
         const data = {
+          role: applyAdminBootstrap({ email: identity.email, role: docs[0]?.role }),
           pollarUserId: identity.userId,
           email: identity.email,
           name: identity.name,
@@ -57,13 +89,6 @@ export const Members: CollectionConfig = {
           authProvider: identity.authProvider,
           lastLoginAt: new Date().toISOString(),
         }
-        const { docs } = await req.payload.find({
-          collection: 'members',
-          where: { pollarUserId: { equals: identity.userId } },
-          limit: 1,
-          depth: 0,
-          overrideAccess: true,
-        })
         const member = docs[0]
           ? await req.payload.update({ collection: 'members', id: docs[0].id, data, overrideAccess: true })
           : await req.payload.create({ collection: 'members', data, overrideAccess: true })
@@ -122,6 +147,20 @@ export const Members: CollectionConfig = {
   ],
   fields: [
     { name: 'pollarUserId', type: 'text', label: 'Pollar user ID', required: true, unique: true, index: true, admin: { readOnly: true } },
+    {
+      name: 'role',
+      type: 'select',
+      label: 'Rol',
+      required: true,
+      defaultValue: 'member',
+      options: [
+        { label: 'Admin', value: 'admin' },
+        { label: 'Organizador', value: 'organizer' },
+        { label: 'Miembro', value: 'member' },
+      ],
+      access: { update: isAdminField },
+      admin: { position: 'sidebar' },
+    },
     { name: 'username', type: 'text', label: '@usuario', unique: true, index: true },
     { name: 'name', type: 'text', label: 'Nombre' },
     { name: 'email', type: 'email', label: 'Email' },

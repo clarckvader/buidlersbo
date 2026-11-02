@@ -7,6 +7,7 @@ import {
   INTERESTS, LIMITS, ROLES, STACK_SUGGESTIONS, USERNAME_HINT, USERNAME_RE, suggestUsername,
 } from '@/lib/profile';
 import type { Member } from '@/payload-types';
+import { takeNext } from '@/lib/nextPath';
 
 const STEPS = ['usuario', 'intereses', 'stack', 'proyecto'] as const;
 
@@ -88,12 +89,12 @@ export function Onboarding() {
     const last = step === STEPS.length - 1;
     const saved = await save(last ? { ...data, finishOnboarding: true } : data);
     if (!saved) return;
-    if (last) router.push('/participante');
+    if (last) router.push(takeNext() ?? '/participante');
     else setStep(step + 1);
   }
 
   async function finishLater() {
-    if (await save({ finishOnboarding: true })) router.push('/participante');
+    if (await save({ finishOnboarding: true })) router.push(takeNext() ?? '/participante');
   }
 
   const toggle = (list: string[], set: (v: string[]) => void, value: string) =>

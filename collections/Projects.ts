@@ -1,12 +1,12 @@
 import type { CollectionConfig } from 'payload'
-import { adminWrite } from './access'
+import { staffWrite } from './access'
 import { slugField } from './fields/slug'
 
 export const Projects: CollectionConfig = {
   slug: 'projects',
   labels: { singular: 'Proyecto', plural: 'Proyectos' },
   admin: { useAsTitle: 'name', defaultColumns: ['rank', 'name', 'cat', 'builder'] },
-  access: { read: () => true, ...adminWrite },
+  access: { read: () => true, ...staffWrite },
   defaultSort: 'rank',
   fields: [
     { name: 'name', type: 'text', label: 'Nombre', required: true },

@@ -5,6 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { usePollar } from '@pollar/react';
 import { User } from '@/lib/types';
 import type { Member } from '@/payload-types';
+import { takeNext } from '@/lib/nextPath';
 
 interface AuthCtx {
   user: User | null;
@@ -93,7 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (pathname !== '/bienvenida') router.push('/bienvenida');
     } else if (justLoggedIn) {
       setJustLoggedIn(false);
-      router.push('/participante');
+      router.push(takeNext() ?? '/participante');
     }
   }, [member, justLoggedIn, pathname, router]);
 

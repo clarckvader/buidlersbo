@@ -1,12 +1,12 @@
 import type { CollectionConfig } from 'payload'
-import { adminWrite } from './access'
+import { staffWrite } from './access'
 import { slugField } from './fields/slug'
 
 export const Events: CollectionConfig = {
   slug: 'events',
   labels: { singular: 'Evento', plural: 'Eventos' },
   admin: { useAsTitle: 'name', defaultColumns: ['name', 'date', 'type', 'city'] },
-  access: { read: () => true, ...adminWrite },
+  access: { read: () => true, ...staffWrite },
   defaultSort: 'date',
   fields: [
     { name: 'name', type: 'text', label: 'Nombre', required: true },

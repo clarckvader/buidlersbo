@@ -5,7 +5,6 @@ import { buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
 import sharp from 'sharp'
 
-import { Users } from './collections/Users'
 import { Members } from './collections/Members'
 import { Media } from './collections/Media'
 import { Posts } from './collections/Posts'
@@ -22,11 +21,11 @@ const databaseUrl = process.env.POSTGRES_CONNECTION_URL || process.env.DATABASE_
 
 export default buildConfig({
   admin: {
-    user: Users.slug,
+    user: Members.slug,
     meta: { titleSuffix: ' — buidlers_ bolivia' },
     importMap: { baseDir: path.resolve(dirname) },
   },
-  collections: [Posts, Events, Teams, Projects, Members, Media, Users],
+  collections: [Posts, Events, Teams, Projects, Members, Media],
   globals: [Site],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
