@@ -31,6 +31,7 @@ export interface Project {
 }
 
 export interface CoffeeEvent {
+  id: number | string;
   slug: string;
   d: string;
   mo: string;
@@ -40,8 +41,21 @@ export interface CoffeeEvent {
   place: string;
   cap: number;
   taken: number;
+  registered: boolean;
   tag: string;
   desc: string;
+}
+
+export interface PendingInviteView {
+  id: number | string;
+  project: { name: string; slug: string; tagline: string };
+  invitedBy: string;
+}
+
+export interface ParticipantData {
+  projects: ProjectCard[];
+  invites: PendingInviteView[];
+  events: CoffeeEvent[];
 }
 
 export interface TeamMember {

@@ -1,120 +1,144 @@
 'use client';
 
+import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Countdown } from './Countdown';
 import { Chip } from '@/components/shared/Chip';
+import { Avatar } from '@/components/shared/Avatar';
 import { useAuth } from '@/context/AuthContext';
+import { useCreateProject } from '@/components/team/Equipo';
+import type { ParticipantData } from '@/lib/types';
+import type { Member } from '@/payload-types';
 
-const AVC = ['oklch(0.9 0.18 104)', 'oklch(0.82 0.12 200)', 'oklch(0.78 0.14 62)'];
-const ini = (n: string) => n.split(/[\s.]+/).filter(Boolean).slice(0, 2).map(x => x[0]).join('');
-
-const PA_TEAM = [
-  { nm: 'Sara Q.',  rl: 'ZK engineer · lead',  c: 0 },
-  { nm: 'Pablo M.', rl: 'Smart contracts',      c: 1 },
-  { nm: 'Marta R.', rl: 'Diseño / producto',    c: 2 },
-];
-const PA_PHASES = [
-  { t: 'Registro de equipos', d: 'hasta 30 jun', st: 'done' },
-  { t: 'Kickoff & mentorías',  d: '04 jul · 09:00', st: 'done' },
-  { t: 'Hacking (48h)',        d: '04–06 jul', st: 'now' },
-  { t: 'Submission & demo',    d: '06 jul · 14:00', st: 'pending' },
-  { t: 'Premiación',           d: '06 jul · 18:00', st: 'pending' },
-];
-const PA_RANK = [
-  { rk: 1, nm: 'ayni.protocol', sc: '8.8k' },
-  { rk: 2, nm: 'pacha.id', sc: '8.2k' },
-  { rk: 3, nm: 'lab altiplano', sc: '7.9k', me: true },
-  { rk: 4, nm: 'khipu.dao', sc: '7.6k' },
-];
-const PA_RES = ['docs / starter kits', 'testnet faucet', 'mentores · agenda', 'discord #buildathon', 'reglas & criterios'];
-
-export function ParticipantApp() {
+function Invites({ invites }: { invites: ParticipantData['invites'] }) {
   const router = useRouter();
-  const { user, logout } = useAuth();
-  const target = new Date('2026-07-04T09:00:00').getTime();
-  const u = user ?? { handle: '@builder', team: 'lab altiplano', provider: 'github', name: 'Builder' };
+  const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  async function respond(id: number | string, accept: boolean) {
+    setBusy(String(id));
+    setError(null);
+    const res = await fetch(`/api/project-invites/${id}/respond`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accept }),
+    });
+    const data = await res.json().catch(() => null);
+    setBusy(null);
+    if (!res.ok) return setError(data?.error ?? 'No se pudo responder');
+    router.refresh();
+  }
+
+  if (!invites.length) return null;
+  return (
+    <div className="pa-card col-12">
+      <h4 className="mono"><span className="g">!</span> invitaciones · {invites.length}</h4>
+      {invites.map((i) => (
+        <div key={String(i.id)} className="pj-list__row mono">
+          <span>
+            <Link href={`/proyectos/${i.project.slug}`} style={{ color: 'var(--ink)' }}>{i.project.name}</Link>
+            {i.invitedBy && <span style={{ color: 'var(--ink-faint)' }}> · de {i.invitedBy}</span>}
+          </span>
+          <span style={{ display: 'flex', gap: 14 }}>
+            <button className="link-btn" disabled={!!busy} onClick={() => respond(i.id, true)}>aceptar</button>
+            <button className="link-btn" style={{ color: 'var(--ink-mute)' }} disabled={!!busy} onClick={() => respond(i.id, false)}>rechazar</button>
+          </span>
+        </div>
+      ))}
+      {error && <div className="ob__error mono">{error}</div>}
+    </div>
+  );
+}
+
+// `member` y `data` vienen del servidor (cookie verificada), no del estado de Pollar en el navegador.
+export function ParticipantApp({ member, data }: { member: Member | null; data: ParticipantData | null }) {
+  const router = useRouter();
+  const { logout, openModal } = useAuth();
+  const createProject = useCreateProject();
 
   const handleLogout = async () => {
     await logout();
     router.push('/');
   };
 
+  if (!member || !data) {
+    return (
+      <div className="pa">
+        <h1>Tu panel</h1>
+        <p className="mono" style={{ color: 'var(--ink-mute)', marginBottom: 20 }}>inicia sesión para ver tus proyectos, invitaciones y eventos.</p>
+        <button className="btn btn-primary" onClick={openModal}>acceder ↗</button>
+      </div>
+    );
+  }
+
+  const handle = member.username ? `@${member.username}` : member.name || 'builder';
+  const tags = [...(member.roles ?? []), ...(member.interests ?? [])];
+
   return (
     <div className="pa">
       <div className="pa__bar mono">
-        <span className="pmt">buidlers@bolivia</span>:<span className="u">~/participante/{u.team.replace(/\s/g, '_')}</span>$
+        <span className="pmt">buidlers@bolivia</span>:<span className="u">~/{member.username ?? 'participante'}</span>$
         <span className="right">
           <button onClick={() => router.push('/')}>← volver al sitio</button>
           <button onClick={handleLogout}>cerrar sesión</button>
         </span>
       </div>
-      <h1>Hola, <span className="y">{u.name}</span>.</h1>
+      <h1>Hola, <span className="y">{member.name || handle}</span>.</h1>
 
       <div className="pa-grid">
-        <div className="pa-card cd-hero col-8">
-          <h4 className="mono"><span className="g">▸</span> hackathon en curso</h4>
-          <div className="cd-name">Buildathon Bolivia 2026</div>
-          <div className="cd-sub mono">santa cruz · manzana 1 · $40K en premios</div>
-          <Countdown target={target} />
-          <div className="mono" style={{ fontSize: 12, color: 'var(--ink-mute)', marginTop: 10 }}>
-            # cuenta regresiva al kickoff
-          </div>
-        </div>
+        <Invites invites={data.invites} />
 
         <div className="pa-card col-4">
-          <h4 className="mono"><span className="g">::</span> mi equipo · {u.team}</h4>
-          {PA_TEAM.map((m) => (
-            <div className="pa-member" key={m.nm}>
-              <span className="bcard__av" style={{ background: AVC[m.c % 3], width: 34, height: 34, fontSize: 11 }}>
-                {ini(m.nm)}
-              </span>
-              <div><div className="nm">{m.nm}</div><div className="rl">{m.rl}</div></div>
-            </div>
-          ))}
-          <button className="pa-invite mono">+ invitar builder (1 slot libre)</button>
-        </div>
-
-        <div className="pa-card col-6">
-          <h4 className="mono"><span className="g">▸</span> mi proyecto</h4>
-          <div className="sub-status mono">
-            <Chip tone="yellow">borrador</Chip>
-            <span style={{ color: 'var(--ink-mute)' }}>guardado hace 12 min</span>
+          <h4 className="mono"><span className="g">@</span> perfil</h4>
+          <div className="pa-member">
+            <Avatar name={member.name} username={member.username} avatar={member.avatar} size={40} />
+            <div><div className="nm">{handle}</div><div className="rl">{member.email}</div></div>
           </div>
-          <div className="sub-field"><label>nombre</label><input defaultValue="pacha.id" /></div>
-          <div className="sub-field"><label>repositorio</label><input defaultValue="github.com/lab-altiplano/pacha-id" /></div>
-          <div className="sub-field"><label>track</label><input defaultValue="Identidad & Privacidad (ZK)" /></div>
-          <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>guardar borrador</button>
+          {tags.length > 0 && <div className="teamcard__stack" style={{ marginTop: 12 }}>{tags.map((t) => <Chip key={t}>{t}</Chip>)}</div>}
+          {(member.stack ?? []).length > 0 && (
+            <div className="teamcard__stack" style={{ marginTop: 8 }}>{(member.stack ?? []).map((t) => <Chip key={t} tone="cyan">{t}</Chip>)}</div>
+          )}
+          {member.building && <p className="rl" style={{ marginTop: 12 }}>{member.building}</p>}
+          <button className="pa-invite mono" onClick={() => router.push('/bienvenida')}>
+            {tags.length || (member.stack ?? []).length ? 'editar perfil' : '+ completar perfil'}
+          </button>
         </div>
 
-        <div className="pa-card col-6">
-          <h4 className="mono"><span className="g">//</span> cronograma</h4>
-          <div className="tl">
-            {PA_PHASES.map((p) => (
-              <div className={'tl-item ' + p.st} key={p.t}>
-                <div className="tt mono">{p.t}</div>
-                <div className="dd mono">{p.d}</div>
-              </div>
-            ))}
-          </div>
+        <div className="pa-card col-8">
+          <h4 className="mono"><span className="g">::</span> mis proyectos · {data.projects.length}</h4>
+          {data.projects.length === 0 && (
+            <p className="mono" style={{ color: 'var(--ink-mute)', fontSize: 13 }}>
+              todavía no estás en ningún proyecto. crea uno o pide a alguien su enlace de invitación.
+            </p>
+          )}
+          {data.projects.map((p) => {
+            const mine = p.team.find((m) => String(m.memberId) === String(member.id));
+            return (
+              <Link key={p.slug} href={`/proyectos/${p.slug}`} className="pj-list__row mono" style={{ textDecoration: 'none' }}>
+                <span style={{ color: 'var(--ink)' }}>{p.name}</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span className="avatars">{p.team.slice(0, 4).map((m) => <Avatar key={String(m.memberId)} {...m} size={22} />)}</span>
+                  <span style={{ color: 'var(--ink-faint)' }}>{mine?.role === 'owner' ? 'creador' : 'integrante'}</span>
+                </span>
+              </Link>
+            );
+          })}
+          <button className="pa-invite mono" onClick={createProject}>+ crear proyecto</button>
         </div>
 
-        <div className="pa-card col-6">
-          <h4 className="mono"><span className="g">#</span> ranking en vivo</h4>
-          {PA_RANK.map((r) => (
-            <div className={'mr-row' + (r.me ? ' me' : '')} key={r.nm}>
-              <span className="rk">{String(r.rk).padStart(2, '0')}</span>
-              <span className="nm">{r.nm}{r.me && ' ← tu equipo'}</span>
-              <span className="sc">{r.sc}</span>
-            </div>
-          ))}
-        </div>
-
-        <div className="pa-card col-6">
-          <h4 className="mono"><span className="g">~</span> recursos</h4>
-          {PA_RES.map((r) => (
-            <a key={r} className="res-link mono" href="#" onClick={(e) => e.preventDefault()}>
-              {r}<span className="arr">↗</span>
-            </a>
+        <div className="pa-card col-12">
+          <h4 className="mono"><span className="g">//</span> mis eventos · {data.events.length}</h4>
+          {data.events.length === 0 && (
+            <p className="mono" style={{ color: 'var(--ink-mute)', fontSize: 13 }}>
+              no estás inscrito en ningún evento. <Link href="/eventos" style={{ color: 'var(--yellow)' }}>ver próximos eventos ↗</Link>
+            </p>
+          )}
+          {data.events.map((e) => (
+            <Link key={String(e.id)} href={`/eventos/${e.slug}`} className="pj-list__row mono" style={{ textDecoration: 'none' }}>
+              <span style={{ color: 'var(--ink)' }}>{e.d} {e.mo} · {e.name}</span>
+              <span style={{ color: 'var(--ink-faint)' }}>{e.city}</span>
+            </Link>
           ))}
         </div>
       </div>

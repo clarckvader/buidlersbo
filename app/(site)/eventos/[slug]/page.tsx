@@ -1,15 +1,17 @@
 import { notFound } from 'next/navigation'
 import { getEvent } from '@/lib/content'
+import { getCurrentMember } from '@/lib/currentMember'
+import { RegisterButton } from '@/components/events/RegisterButton'
 import Link from 'next/link'
 
 export default async function EventPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const event = await getEvent(slug)
+  const event = await getEvent(slug, await getCurrentMember())
   if (!event) notFound()
 
-  const pct = Math.round((event.taken / event.cap) * 100)
+  const pct = event.cap ? Math.min(100, Math.round((event.taken / event.cap) * 100)) : 0
   const hot = pct >= 75
-  const full = event.taken >= event.cap
+  const full = !!event.cap && event.taken >= event.cap
 
   return (
     <div className="section-pad">
@@ -42,9 +44,7 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
           </div>
         </div>
 
-        <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} disabled={full}>
-          {full ? 'evento lleno' : 'registrarme ↗'}
-        </button>
+        <RegisterButton eventId={event.id} registered={event.registered} full={full} block />
       </div>
     </div>
   )

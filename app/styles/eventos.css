@@ -46,3 +46,4 @@
   .evcap { width: 100%; }
   .evcard__name { font-size: 18px; }
 }
+.ev-reg { display: flex; flex-direction: column; gap: 6px; }

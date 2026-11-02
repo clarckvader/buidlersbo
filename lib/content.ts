@@ -1,10 +1,10 @@
-import { getPayload } from 'payload'
+import { getPayload, type Where } from 'payload'
 import { convertLexicalToHTML } from '@payloadcms/richtext-lexical/html'
 import type { SerializedEditorState } from '@payloadcms/richtext-lexical/lexical'
 import config from '@payload-config'
 import type { Event as EventDoc, Member, Post as PostDoc, Project as ProjectDoc } from '@/payload-types'
-import type { Post, CoffeeEvent, Project, Value, Stat, ProjectCard, ProjectPage, TeamMember } from '@/lib/types'
-import { countRegistrations } from '@/lib/services/events'
+import type { Post, CoffeeEvent, Project, Value, Stat, ProjectCard, ProjectPage, TeamMember, ParticipantData } from '@/lib/types'
+import { countRegistrations, memberEventIds } from '@/lib/services/events'
 
 const payload = () => getPayload({ config })
 
@@ -51,10 +51,11 @@ export async function getPost(slug: string): Promise<(Post & { contentHtml: stri
   return { ...docToPost(doc), contentHtml: richTextToHtml(doc.content) }
 }
 
-function docToEvent(doc: EventDoc, taken: number): CoffeeEvent {
+function docToEvent(doc: EventDoc, taken: number, registered: boolean): CoffeeEvent {
   const iso = toIsoDay(doc.date)
   const [, m, d] = iso.split('-')
   return {
+    id:    doc.id,
     slug:  doc.slug,
     name:  doc.name,
     d:     iso ? String(parseInt(d, 10)) : '',
@@ -64,25 +65,29 @@ function docToEvent(doc: EventDoc, taken: number): CoffeeEvent {
     place: doc.place ?? '',
     cap:   doc.cap ?? 0,
     taken,
+    registered,
     tag:   doc.tag ?? '',
     desc:  doc.desc ?? '',
   }
 }
 
-export async function getEvents(): Promise<CoffeeEvent[]> {
+// `viewer`: miembro de la sesión, para marcar en qué eventos está inscrito.
+export async function getEvents(viewer: Member | null = null, where?: Where): Promise<CoffeeEvent[]> {
   const p = await payload()
-  const { docs } = await p.find({ collection: 'events', limit: 0, sort: 'date', depth: 0 })
+  const { docs } = await p.find({ collection: 'events', where, limit: 0, sort: 'date', depth: 0 })
   const counts = await countRegistrations(p, docs.map((d) => d.id))
-  return docs.map((doc) => docToEvent(doc, counts.get(String(doc.id)) ?? 0))
+  const mine = viewer ? await memberEventIds(p, viewer.id) : new Set<string>()
+  return docs.map((doc) => docToEvent(doc, counts.get(String(doc.id)) ?? 0, mine.has(String(doc.id))))
 }
 
-export async function getEvent(slug: string): Promise<(CoffeeEvent & { contentHtml: string }) | null> {
+export async function getEvent(slug: string, viewer: Member | null = null): Promise<(CoffeeEvent & { contentHtml: string }) | null> {
   const p = await payload()
   const { docs } = await p.find({ collection: 'events', where: { slug: { equals: slug } }, limit: 1, depth: 1 })
   const doc = docs[0]
   if (!doc) return null
   const taken = (await countRegistrations(p, [doc.id])).get(String(doc.id)) ?? 0
-  return { ...docToEvent(doc, taken), contentHtml: richTextToHtml(doc.content) }
+  const registered = viewer ? (await memberEventIds(p, viewer.id)).has(String(doc.id)) : false
+  return { ...docToEvent(doc, taken, registered), contentHtml: richTextToHtml(doc.content) }
 }
 
 // Ranking: proyectos que los organizadores marcan como destacados.
@@ -174,6 +179,40 @@ export async function getProjectPage(slug: string, viewer: Member | null): Promi
     links:       doc.links ?? [],
     isOwner:     !!viewer && String(viewer.id) === String(ownerId),
     isMember:    !!viewer && team.some((m) => String(m.memberId) === String(viewer.id)),
+  }
+}
+
+// Lo que ve un miembro en /participante.
+export async function getParticipantData(member: Member): Promise<ParticipantData> {
+  const p = await payload()
+  const memberships = await p.find({ collection: 'project-members', where: { member: { equals: member.id } }, limit: 0, depth: 0 })
+  const projectIds = memberships.docs.map((m) => (typeof m.project === 'object' ? m.project.id : m.project))
+  const projectDocs = projectIds.length
+    ? (await p.find({ collection: 'projects', where: { id: { in: projectIds } }, limit: 0, sort: '-createdAt', depth: 0 })).docs
+    : []
+  const teams = await teamsFor(projectDocs.map((d) => d.id))
+
+  const invites = await p.find({
+    collection: 'project-invites',
+    where: { member: { equals: member.id }, status: { equals: 'pending' } },
+    limit: 50,
+    depth: 1,
+    overrideAccess: true,
+  })
+
+  const eventIds = [...(await memberEventIds(p, member.id))]
+  return {
+    projects: projectDocs.map((doc) => docToCard(doc, teams.get(String(doc.id)) ?? [])),
+    invites: invites.docs.map((invite) => {
+      const project = invite.project as ProjectDoc
+      const by = typeof invite.invitedBy === 'object' ? invite.invitedBy : null
+      return {
+        id: invite.id,
+        project: { name: project.name, slug: project.slug, tagline: project.tagline ?? '' },
+        invitedBy: by?.username ? `@${by.username}` : by?.name ?? '',
+      }
+    }),
+    events: eventIds.length ? await getEvents(member, { id: { in: eventIds } }) : [],
   }
 }
 
