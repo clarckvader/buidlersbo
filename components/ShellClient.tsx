@@ -11,7 +11,7 @@ export function ShellClient({ children }: { children: ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
   const { modalOpen } = useAuth();
-  const isApp = pathname.startsWith('/participante');
+  const isApp = pathname.startsWith('/participante') || pathname === '/bienvenida';
 
   return (
     <div className="shell">

@@ -1,14 +1,10 @@
 import { notFound } from 'next/navigation'
-import { getTeamSlugs, getTeam } from '@/lib/content'
+import { getTeam } from '@/lib/content'
 import Link from 'next/link'
 
-export async function generateStaticParams() {
-  const slugs = await getTeamSlugs()
-  return slugs.map((slug) => ({ slug }))
-}
-
-export default async function TeamPage({ params }: { params: { slug: string } }) {
-  const team = await getTeam(params.slug)
+export default async function TeamPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const team = await getTeam(slug)
   if (!team) notFound()
 
   const spotsLeft = team.open

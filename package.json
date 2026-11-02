@@ -2,27 +2,40 @@
   "name": "builders-web",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
+    "dev": "cross-env NODE_OPTIONS=--no-deprecation next dev",
+    "build": "cross-env NODE_OPTIONS=--no-deprecation next build",
+    "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
+    "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
+    "generate:types": "cross-env NODE_OPTIONS=--no-deprecation payload generate:types",
+    "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap",
+    "migrate:content": "cross-env NODE_OPTIONS=--no-deprecation payload run scripts/migrate-content.ts"
   },
   "dependencies": {
-    "@keystatic/core": "^0.5.50",
-    "@keystatic/next": "^5.0.4",
-    "@pollar/react": "^0.8.0",
-    "next": "14.2.29",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "@payloadcms/db-postgres": "3.92.1",
+    "@payloadcms/next": "3.92.1",
+    "@payloadcms/richtext-lexical": "3.92.1",
+    "@payloadcms/ui": "3.92.1",
+    "@pollar/core": "^0.12.0",
+    "@pollar/react": "^0.12.0",
+    "cross-env": "^7.0.3",
+    "graphql": "^16.8.1",
+    "jose": "^5.10.0",
+    "next": "16.3.3",
+    "payload": "3.92.1",
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "sharp": "0.35.4"
   },
   "devDependencies": {
-    "@types/node": "^20",
-    "@types/react": "^18",
-    "@types/react-dom": "^18",
+    "@types/node": "^22",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.47",
     "tailwindcss": "^3.4.14",
-    "typescript": "^5"
+    "typescript": "5.7.3",
+    "yaml": "^2.6.0"
   }
 }

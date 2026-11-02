@@ -1,14 +1,10 @@
 import { notFound } from 'next/navigation'
-import { getEventSlugs, getEvent } from '@/lib/content'
+import { getEvent } from '@/lib/content'
 import Link from 'next/link'
 
-export async function generateStaticParams() {
-  const slugs = await getEventSlugs()
-  return slugs.map((slug) => ({ slug }))
-}
-
-export default async function EventPage({ params }: { params: { slug: string } }) {
-  const event = await getEvent(params.slug)
+export default async function EventPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const event = await getEvent(slug)
   if (!event) notFound()
 
   const pct = Math.round((event.taken / event.cap) * 100)

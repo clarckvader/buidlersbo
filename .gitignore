@@ -37,3 +37,7 @@ yarn-error.log*
 .vscode/
 *.swp
 *.swo
+
+.codegraph
+# Payload uploads (local)
+/media

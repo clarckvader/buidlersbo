@@ -31,6 +31,7 @@ export interface Project {
 }
 
 export interface Team {
+  slug: string;
   name: string;
   focus: string;
   city: string;
@@ -41,6 +42,7 @@ export interface Team {
 }
 
 export interface CoffeeEvent {
+  slug: string;
   d: string;
   mo: string;
   name: string;
@@ -54,6 +56,7 @@ export interface CoffeeEvent {
 }
 
 export interface Post {
+  slug: string;
   cat: string;
   title: string;
   read: string;

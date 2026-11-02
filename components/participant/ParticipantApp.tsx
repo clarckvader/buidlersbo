@@ -34,8 +34,8 @@ export function ParticipantApp() {
   const target = new Date('2026-07-04T09:00:00').getTime();
   const u = user ?? { handle: '@builder', team: 'lab altiplano', provider: 'github', name: 'Builder' };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     router.push('/');
   };
 
@@ -48,7 +48,7 @@ export function ParticipantApp() {
           <button onClick={handleLogout}>cerrar sesión</button>
         </span>
       </div>
-      <h1>Hola, <span className="y">{u.handle}</span>.</h1>
+      <h1>Hola, <span className="y">{u.name}</span>.</h1>
 
       <div className="pa-grid">
         <div className="pa-card cd-hero col-8">
