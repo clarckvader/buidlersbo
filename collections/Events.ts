@@ -7,6 +7,13 @@ export const Events: CollectionConfig = {
   labels: { singular: 'Evento', plural: 'Eventos' },
   admin: { useAsTitle: 'name', defaultColumns: ['name', 'date', 'type', 'city'] },
   access: { read: () => true, ...staffWrite },
+  hooks: {
+    beforeDelete: [
+      async ({ req, id }) => {
+        await req.payload.delete({ collection: 'event-registrations', where: { event: { equals: id } }, req, overrideAccess: true })
+      },
+    ],
+  },
   defaultSort: 'date',
   fields: [
     { name: 'name', type: 'text', label: 'Nombre', required: true },

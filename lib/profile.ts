@@ -30,3 +30,6 @@ export const cleanList = (v: unknown, max: number): string[] | undefined =>
 
 export const cleanLinks = (v: unknown): string[] =>
   (cleanList(v, LIMITS.links) ?? []).filter((l) => /^https?:\/\/\S+$/.test(l))
+
+export const PROJECT_STATUS = ['idea', 'construyendo', 'lanzado'] as const
+export type ProjectStatus = (typeof PROJECT_STATUS)[number]

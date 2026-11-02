@@ -3,8 +3,7 @@
 import { randomBytes } from 'crypto'
 import type { Payload, RequiredDataFromCollectionSlug, Where } from 'payload'
 import type { Member, Project, ProjectInvite } from '../../payload-types'
-import { PROJECT_STATUS, type ProjectStatus } from '../../collections/Projects'
-import { LIMITS, cleanLinks, cleanList } from '../profile'
+import { LIMITS, PROJECT_STATUS, cleanLinks, cleanList, type ProjectStatus } from '../profile'
 import { slugify } from '../slugify'
 
 export class ServiceError extends Error {
@@ -118,11 +117,9 @@ export async function updateProject(payload: Payload, actor: Member, projectId: 
 }
 
 export async function deleteProject(payload: Payload, actor: Member, projectId: ID): Promise<void> {
-  await getOwnedProject(payload, actor, projectId)
-  const where = { project: { equals: projectId } }
-  await payload.delete({ collection: 'project-invites', where, overrideAccess: true })
-  await payload.delete({ collection: 'project-members', where, overrideAccess: true })
-  await payload.delete({ collection: 'projects', id: projectId, overrideAccess: true })
+  const project = await getOwnedProject(payload, actor, projectId)
+  // El hook beforeDelete de `projects` borra integrantes e invitaciones.
+  await payload.delete({ collection: 'projects', id: project.id, overrideAccess: true })
 }
 
 export async function getInviteToken(payload: Payload, actor: Member, projectId: ID): Promise<string> {
@@ -150,7 +147,8 @@ export async function joinByToken(payload: Payload, member: Member, token: strin
 
 // `identifier`: "@usuario", "usuario" o un correo.
 export async function inviteMember(payload: Payload, actor: Member, projectId: ID, identifier: string): Promise<ProjectInvite> {
-  await getOwnedProject(payload, actor, projectId)
+  // Usar el id del documento (numérico): el que llega de la URL es texto.
+  const project = await getOwnedProject(payload, actor, projectId)
   const raw = (identifier ?? '').trim()
   const isEmail = raw.includes('@') && !raw.startsWith('@')
   let target: Member | null = null
@@ -167,12 +165,12 @@ export async function inviteMember(payload: Payload, actor: Member, projectId: I
     if (!target) throw new ServiceError(404, `No existe @${username}`)
   }
 
-  if (target && (await findMembership(payload, projectId, target.id))) {
+  if (target && (await findMembership(payload, project.id, target.id))) {
     throw new ServiceError(409, 'Esa persona ya es parte del proyecto')
   }
 
   const pendingWhere: Where = {
-    project: { equals: projectId },
+    project: { equals: project.id },
     status: { equals: 'pending' },
     ...(target ? { member: { equals: target.id } } : { email: { equals: email } }),
   }
@@ -182,7 +180,7 @@ export async function inviteMember(payload: Payload, actor: Member, projectId: I
   return payload.create({
     collection: 'project-invites',
     data: {
-      project: projectId as number,
+      project: project.id,
       invitedBy: actor.id,
       ...(target ? { member: target.id } : { email: email! }),
       status: 'pending',

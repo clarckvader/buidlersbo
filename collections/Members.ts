@@ -1,5 +1,6 @@
-import type { CollectionConfig, PayloadRequest } from 'payload'
+import { APIError, type CollectionConfig, type PayloadRequest } from 'payload'
 import { verifyPollarToken } from '../lib/pollar'
+import { claimEmailInvites } from '../lib/services/projects'
 import { getSessionMember, memberCookie, signMemberSession } from '../lib/memberSession'
 import { isAdmin, isAdminField, isStaff, isStaffUser, type Role } from './access'
 import { INTERESTS, LIMITS, ROLES, USERNAME_RE, cleanLinks, cleanList } from '../lib/profile'
@@ -49,6 +50,25 @@ export const Members: CollectionConfig = {
     ],
   },
   access: { admin: ({ req }) => isStaffUser(req.user), read: isStaff, create: isAdmin, update: isAdmin, delete: isAdmin },
+  hooks: {
+    // Borrar un miembro (solo admins) limpia su participación; no si es dueño de proyectos.
+    beforeDelete: [
+      async ({ req, id }) => {
+        const owned = await req.payload.count({ collection: 'projects', where: { owner: { equals: id } }, req, overrideAccess: true })
+        if (owned.totalDocs > 0) {
+          throw new APIError('No se puede borrar: es dueño de proyectos. Bórralos primero.', 400, null, true)
+        }
+        await req.payload.delete({ collection: 'project-members', where: { member: { equals: id } }, req, overrideAccess: true })
+        await req.payload.delete({ collection: 'event-registrations', where: { member: { equals: id } }, req, overrideAccess: true })
+        await req.payload.delete({
+          collection: 'project-invites',
+          where: { or: [{ member: { equals: id } }, { invitedBy: { equals: id } }] },
+          req,
+          overrideAccess: true,
+        })
+      },
+    ],
+  },
   endpoints: [
     {
       // Miembro de la sesión actual (o null).
@@ -88,6 +108,8 @@ export const Members: CollectionConfig = {
         const member = docs[0]
           ? await req.payload.update({ collection: 'members', id: docs[0].id, data, overrideAccess: true })
           : await req.payload.create({ collection: 'members', data, overrideAccess: true })
+        // Invitaciones a proyectos enviadas a su correo antes de que fuera miembro.
+        await claimEmailInvites(req.payload, member)
 
         return Response.json(
           { member },
