@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { rememberNext, safeNextPath, takeNext } from '@/lib/nextPath'
+import { clearNext, rememberNext, safeNextPath, takeNext } from '@/lib/nextPath'
 
 function memoryStorage() {
   const map = new Map<string, string>()
@@ -32,6 +32,13 @@ describe('nextPath', () => {
   it('no guarda destinos externos', () => {
     const s = memoryStorage()
     rememberNext('//evil.com', s)
+    expect(takeNext(s)).toBeNull()
+  })
+
+  it('clearNext descarta un destino pendiente (modal cerrado sin login)', () => {
+    const s = memoryStorage()
+    rememberNext('/proyectos/nuevo', s)
+    clearNext(s)
     expect(takeNext(s)).toBeNull()
   })
 })

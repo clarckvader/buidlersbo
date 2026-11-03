@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { usePollar } from '@pollar/react';
 import { User } from '@/lib/types';
 import type { Member } from '@/payload-types';
-import { takeNext } from '@/lib/nextPath';
+import { clearNext, takeNext } from '@/lib/nextPath';
 import { postLoginRoute } from '@/lib/postLogin';
 
 interface AuthCtx {
@@ -16,6 +16,7 @@ interface AuthCtx {
   modalOpen: boolean;
   openModal: () => void;
   closeModal: () => void;
+  dismissModal: () => void;
   login: (provider: 'google' | 'github' | 'email' | 'wallet') => void;
   logout: () => Promise<void>;
 }
@@ -28,6 +29,7 @@ const AuthContext = createContext<AuthCtx>({
   modalOpen: false,
   openModal: () => {},
   closeModal: () => {},
+  dismissModal: () => {},
   login: () => {},
   logout: async () => {},
 });
@@ -45,6 +47,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const openModal = useCallback(() => setModalOpen(true), []);
   const closeModal = useCallback(() => setModalOpen(false), []);
+  // Cerrar sin iniciar sesión: se descarta el destino pendiente (crear proyecto, unirse, etc.).
+  const dismissModal = useCallback(() => {
+    clearNext();
+    setModalOpen(false);
+  }, []);
 
   // Sesión del servidor (colección `members` en Payload), derivada del login de Pollar.
   const [member, setMember] = useState<Member | null>(null);
@@ -129,7 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [pollarLogout]);
 
   return (
-    <AuthContext.Provider value={{ user, member, setMember, loading: syncing, modalOpen, openModal, closeModal, login, logout }}>
+    <AuthContext.Provider value={{ user, member, setMember, loading: syncing, modalOpen, openModal, closeModal, dismissModal, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

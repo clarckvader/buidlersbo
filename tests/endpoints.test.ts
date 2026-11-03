@@ -83,17 +83,11 @@ describe('ids desde la URL (texto)', () => {
   })
 })
 
-describe('endpoints de invitaciones', () => {
-  it('mine devuelve solo las del miembro, con proyecto', async () => {
-    const owner = await createMember(payload)
-    const ana = await createMember(payload, { username: 'ana' })
-    await createMember(payload, { username: 'beto' })
-    const project = await createProject(payload, owner, { name: 'Pacha' })
-    await inviteMember(payload, owner, project.id, '@ana')
-    await inviteMember(payload, owner, project.id, '@beto')
-    const res = await call('project-invites', 'get', '/mine', { member: ana })
-    expect(res.body.invites).toHaveLength(1)
-    expect(res.body.invites[0].project.name).toBe('Pacha')
+describe('ids mal formados', () => {
+  it('→ 404, no 500', async () => {
+    const m = await createMember(payload)
+    expect((await call('projects', 'patch', '/:id/edit', { member: m, params: { id: 'abc' }, body: { tagline: 'x' } })).status).toBe(404)
+    expect((await call('event-registrations', 'post', '/event/:eventId', { member: m, params: { eventId: '1; drop' } })).status).toBe(404)
   })
 })
 

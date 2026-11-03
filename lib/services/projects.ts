@@ -1,7 +1,7 @@
 // Reglas de proyectos e invitaciones. Toda escritura de miembros pasa por aquí (con overrideAccess),
 // así que cada función valida quién actúa.
 import { randomBytes } from 'crypto'
-import type { Payload, RequiredDataFromCollectionSlug, Where } from 'payload'
+import type { Payload, PayloadRequest, RequiredDataFromCollectionSlug, Where } from 'payload'
 import type { Member, Project, ProjectInvite } from '../../payload-types'
 import { LIMITS, PROJECT_STATUS, checkLinks, cleanList, type ProjectStatus } from '../profile'
 import { slugify } from '../slugify'
@@ -79,40 +79,59 @@ async function uniqueSlug(payload: Payload, name: string): Promise<string> {
   }
 }
 
-async function findMembership(payload: Payload, projectId: ID, memberId: ID) {
+async function findMembership(payload: Payload, projectId: ID, memberId: ID, req?: PayloadRequest) {
   const { docs } = await payload.find({
     collection: 'project-members',
     where: { project: { equals: projectId }, member: { equals: memberId } },
     limit: 1,
     depth: 0,
     overrideAccess: true,
+    req,
   })
   return docs[0] ?? null
 }
 
 // Idempotente: si ya es integrante no hace nada (también ante carreras con el índice único).
-async function ensureMembership(payload: Payload, projectId: ID, memberId: ID, role: 'owner' | 'member') {
-  if (await findMembership(payload, projectId, memberId)) return
+async function ensureMembership(payload: Payload, projectId: ID, memberId: ID, role: 'owner' | 'member', req?: PayloadRequest) {
+  if (await findMembership(payload, projectId, memberId, req)) return
   try {
-    await payload.create({ collection: 'project-members', data: { project: projectId as number, member: memberId as number, role }, depth: 0, overrideAccess: true })
+    await payload.create({ collection: 'project-members', data: { project: projectId as number, member: memberId as number, role }, depth: 0, overrideAccess: true, req })
   } catch (err) {
-    if (!(await findMembership(payload, projectId, memberId))) throw err
+    if (!(await findMembership(payload, projectId, memberId, req))) throw err
   }
+}
+
+// Mantiene el equipo alineado con `owner` (también cuando staff crea o reasigna desde el panel).
+export async function syncOwnerMembership(payload: Payload, projectId: ID, ownerId: ID, previousOwnerId: ID | null, req?: PayloadRequest) {
+  if (previousOwnerId != null && !sameId(previousOwnerId, ownerId)) {
+    const prev = await findMembership(payload, projectId, previousOwnerId, req)
+    if (prev) await payload.update({ collection: 'project-members', id: prev.id, data: { role: 'member' }, depth: 0, overrideAccess: true, req })
+  }
+  const current = await findMembership(payload, projectId, ownerId, req)
+  if (!current) await ensureMembership(payload, projectId, ownerId, 'owner', req)
+  else if (current.role !== 'owner') await payload.update({ collection: 'project-members', id: current.id, data: { role: 'owner' }, depth: 0, overrideAccess: true, req })
 }
 
 export async function createProject(payload: Payload, owner: Member, data: ProjectInput): Promise<Project> {
   const clean = sanitize({ status: 'idea', ...data, name: data.name })
-  const projectData: RequiredDataFromCollectionSlug<'projects'> = {
-    ...clean,
-    name: clean.name!,
-    status: clean.status ?? 'idea',
-    slug: await uniqueSlug(payload, clean.name!),
-    owner: owner.id,
-    inviteToken: newToken(),
+  // Reintenta si otro proyecto con el mismo nombre ganó el slug entre la consulta y la inserción.
+  for (let attempt = 0; ; attempt++) {
+    const projectData: RequiredDataFromCollectionSlug<'projects'> = {
+      ...clean,
+      name: clean.name!,
+      status: clean.status ?? 'idea',
+      slug: await uniqueSlug(payload, clean.name!),
+      owner: owner.id,
+      inviteToken: newToken(),
+    }
+    try {
+      // El hook afterChange de `projects` agrega al dueño al equipo.
+      return await payload.create({ collection: 'projects', data: projectData, depth: 0, overrideAccess: true })
+    } catch (err) {
+      const taken = await payload.count({ collection: 'projects', where: { slug: { equals: projectData.slug } }, overrideAccess: true })
+      if (attempt >= 4 || taken.totalDocs === 0) throw err
+    }
   }
-  const project = await payload.create({ collection: 'projects', data: projectData, depth: 0, overrideAccess: true })
-  await ensureMembership(payload, project.id, owner.id, 'owner')
-  return project
 }
 
 export async function updateProject(payload: Payload, actor: Member, projectId: ID, data: Partial<ProjectInput>): Promise<Project> {
@@ -156,6 +175,13 @@ export async function joinByToken(payload: Payload, member: Member, token: strin
   const project = await findByToken(payload, token)
   if (!project) throw new ServiceError(404, 'Este enlace ya no es válido')
   await ensureMembership(payload, project.id, member.id, 'member')
+  // Si además tenía una invitación pendiente a este proyecto, ya no tiene sentido mostrarla.
+  await payload.update({
+    collection: 'project-invites',
+    where: { project: { equals: project.id }, member: { equals: member.id }, status: { equals: 'pending' } },
+    data: { status: 'accepted' },
+    overrideAccess: true,
+  })
   return project
 }
 
@@ -234,6 +260,8 @@ export async function respondToInvite(payload: Payload, member: Member, inviteId
     (!invite.member && !!invite.email && !!member.email && hasVerifiedEmail(member.authProvider) &&
       normalizeEmail(member.email) === invite.email)
   if (!forMe) throw new ServiceError(403, 'Esta invitación no es para ti')
+  // Aceptar algo ya aceptado (p. ej. se unió antes por enlace) no es un error.
+  if (accept && invite.status === 'accepted') return
   if (invite.status !== 'pending') throw new ServiceError(409, 'Esta invitación ya no está vigente')
 
   if (accept) await ensureMembership(payload, idOf(invite.project)!, member.id, 'member')
@@ -259,9 +287,11 @@ export async function removeMember(payload: Payload, actor: Member, projectId: I
   if (sameId(idOf(project.owner), memberId)) throw new ServiceError(400, 'El dueño no puede quitarse del proyecto')
   await payload.delete({
     collection: 'project-members',
-    where: { project: { equals: projectId }, member: { equals: memberId } },
+    where: { project: { equals: project.id }, member: { equals: memberId } },
     overrideAccess: true,
   })
+  // Quien fue quitado no debe poder volver con el enlace que ya tenía.
+  await payload.update({ collection: 'projects', id: project.id, data: { inviteToken: newToken() }, depth: 0, overrideAccess: true })
 }
 
 export async function leaveProject(payload: Payload, member: Member, projectId: ID): Promise<void> {

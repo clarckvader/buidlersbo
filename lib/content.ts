@@ -4,7 +4,7 @@ import type { SerializedEditorState } from '@payloadcms/richtext-lexical/lexical
 import config from '@payload-config'
 import type { Event as EventDoc, Member, Post as PostDoc, Project as ProjectDoc } from '@/payload-types'
 import type { Post, CoffeeEvent, Project, Value, Stat, ProjectCard, ProjectPage, TeamMember, ParticipantData } from '@/lib/types'
-import { countRegistrations, memberEventIds } from '@/lib/services/events'
+import { countRegistrations, memberEventIds, todayIso } from '@/lib/services/events'
 
 const payload = () => getPayload({ config })
 
@@ -71,12 +71,13 @@ function docToEvent(doc: EventDoc, taken: number, registered: boolean): CoffeeEv
   }
 }
 
-// `viewer`: miembro de la sesión, para marcar en qué eventos está inscrito.
-export async function getEvents(viewer: Member | null = null, where?: Where): Promise<CoffeeEvent[]> {
+// Por defecto, eventos de hoy en adelante (o sin fecha). `viewer`: para marcar en cuáles está inscrito.
+export async function getEvents(viewer: Member | null = null, where?: Where, viewerEventIds?: Set<string>): Promise<CoffeeEvent[]> {
   const p = await payload()
-  const { docs } = await p.find({ collection: 'events', where, limit: 0, sort: 'date', depth: 0 })
+  const upcoming: Where = { or: [{ date: { greater_than_equal: `${todayIso()}T00:00:00.000Z` } }, { date: { exists: false } }] }
+  const { docs } = await p.find({ collection: 'events', where: where ?? upcoming, limit: 0, sort: 'date', depth: 0 })
   const counts = await countRegistrations(p, docs.map((d) => d.id))
-  const mine = viewer ? await memberEventIds(p, viewer.id) : new Set<string>()
+  const mine = viewerEventIds ?? (viewer ? await memberEventIds(p, viewer.id) : new Set<string>())
   return docs.map((doc) => docToEvent(doc, counts.get(String(doc.id)) ?? 0, mine.has(String(doc.id))))
 }
 
@@ -200,7 +201,8 @@ export async function getParticipantData(member: Member): Promise<ParticipantDat
     overrideAccess: true,
   })
 
-  const eventIds = [...(await memberEventIds(p, member.id))]
+  const registered = await memberEventIds(p, member.id)
+  const eventIds = [...registered]
   return {
     projects: projectDocs.map((doc) => docToCard(doc, teams.get(String(doc.id)) ?? [])),
     invites: invites.docs.map((invite) => {
@@ -212,7 +214,7 @@ export async function getParticipantData(member: Member): Promise<ParticipantDat
         invitedBy: by?.username ? `@${by.username}` : by?.name ?? '',
       }
     }),
-    events: eventIds.length ? await getEvents(member, { id: { in: eventIds } }) : [],
+    events: eventIds.length ? await getEvents(member, { id: { in: eventIds } }, registered) : [],
   }
 }
 

@@ -4,6 +4,9 @@ import type { Member } from '../../payload-types'
 import { ServiceError } from './projects'
 
 type ID = number | string
+
+// Día de hoy (UTC) como YYYY-MM-DD; las fechas de eventos se guardan a mediodía UTC.
+export const todayIso = () => new Date().toISOString().slice(0, 10)
 const relId = (v: unknown) => String(v && typeof v === 'object' ? (v as { id: ID }).id : v)
 
 async function findRegistration(payload: Payload, memberId: ID, eventId: ID) {
@@ -22,6 +25,7 @@ export async function registerForEvent(payload: Payload, member: Member, eventId
   const event = await payload.findByID({ collection: 'events', id: eventId, depth: 0, overrideAccess: true, disableErrors: true })
   if (!event) throw new ServiceError(404, 'Evento no encontrado')
   if (await findRegistration(payload, member.id, eventId)) return
+  if (event.date && event.date.slice(0, 10) < todayIso()) throw new ServiceError(409, 'El evento ya pasó')
 
   const taken = (await countRegistrations(payload, [eventId])).get(String(eventId)) ?? 0
   if (event.cap && taken >= event.cap) throw new ServiceError(409, 'El evento está lleno')

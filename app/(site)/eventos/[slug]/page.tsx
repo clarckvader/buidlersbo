@@ -36,7 +36,7 @@ export default async function EventPage({ params }: { params: Promise<{ slug: st
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 14 }}>
             <span>{event.taken} registrados</span>
             <span style={{ color: hot ? 'var(--yellow)' : 'inherit' }}>
-              {full ? 'lleno' : hot ? 'casi lleno' : `${event.cap - event.taken} disponibles`}
+              {!event.cap ? 'cupo libre' : full ? 'lleno' : hot ? 'casi lleno' : `${event.cap - event.taken} disponibles`}
             </span>
           </div>
           <div className="evcap__bar">

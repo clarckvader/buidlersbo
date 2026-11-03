@@ -11,13 +11,14 @@ export function RegisterButton({ eventId, registered, full, block = false }: {
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, openModal } = useAuth();
+  // `member` existe recién cuando el servidor abrió la sesión (cookie); antes, un POST daría 401.
+  const { member, loading, openModal } = useAuth();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const style = block ? { width: '100%', justifyContent: 'center' as const } : undefined;
 
   async function toggle() {
-    if (!user) {
+    if (!member) {
       rememberNext(pathname);
       return openModal();
     }
@@ -36,7 +37,7 @@ export function RegisterButton({ eventId, registered, full, block = false }: {
   if (registered) {
     return (
       <div className="ev-reg">
-        <button className="btn btn-ghost" style={style} onClick={toggle} disabled={busy}>
+        <button className="btn btn-ghost" style={style} onClick={toggle} disabled={busy || loading}>
           {busy ? 'cancelando…' : 'inscrito ✓ · cancelar'}
         </button>
         {error && <span className="ob__error mono">{error}</span>}
@@ -46,7 +47,7 @@ export function RegisterButton({ eventId, registered, full, block = false }: {
 
   return (
     <div className="ev-reg">
-      <button className="btn btn-primary" style={style} onClick={toggle} disabled={busy || full}>
+      <button className="btn btn-primary" style={style} onClick={toggle} disabled={busy || full || loading}>
         {full ? 'evento lleno' : busy ? 'inscribiendo…' : 'registrarme ↗'}
       </button>
       {error && <span className="ob__error mono">{error}</span>}

@@ -41,13 +41,13 @@ export function Eventos({ events }: { events: CoffeeEvent[] }) {
                   <div className="evcard__meta mono">
                     <span>◷ <b>{e.city}</b></span>
                     <span>@ <b>{e.place}</b></span>
-                    <span>cupo <b>{e.cap}</b></span>
+                    <span>cupo <b>{e.cap || 'libre'}</b></span>
                   </div>
                 </div>
                 <div className="evcard__cta">
                   <div className="evcap">
                     <div className="evcap__lbl">
-                      <span>{e.taken}/{e.cap}</span>
+                      <span>{e.cap ? `${e.taken}/${e.cap}` : `${e.taken} inscritos`}</span>
                       <span>{full ? 'lleno' : hot ? 'casi lleno' : 'abierto'}</span>
                     </div>
                     <div className="evcap__bar"><i className={hot ? 'hot' : ''} style={{ width: pct + '%' }} /></div>

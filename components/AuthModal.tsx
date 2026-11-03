@@ -5,14 +5,14 @@ import { usePollar } from '@pollar/react';
 import { useAuth } from '@/context/AuthContext';
 
 export function AuthModal() {
-  const { closeModal } = useAuth();
+  const { closeModal, dismissModal } = useAuth();
   const { login, openLoginModal } = usePollar();
 
   useEffect(() => {
-    const k = (e: KeyboardEvent) => { if (e.key === 'Escape') closeModal(); };
+    const k = (e: KeyboardEvent) => { if (e.key === 'Escape') dismissModal(); };
     window.addEventListener('keydown', k);
     return () => window.removeEventListener('keydown', k);
-  }, [closeModal]);
+  }, [dismissModal]);
 
   const handleSocial = (provider: 'google' | 'github') => {
     closeModal();
@@ -25,12 +25,12 @@ export function AuthModal() {
   };
 
   return (
-    <div className="modal-scrim" onClick={closeModal}>
+    <div className="modal-scrim" onClick={dismissModal}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal__bar">
           <span className="dots"><i /><i /><i /></span>
           <span className="t mono">auth — ./acceder</span>
-          <button className="x" onClick={closeModal}>×</button>
+          <button className="x" onClick={dismissModal}>×</button>
         </div>
         <div className="modal__body">
           <div className="pre mono"><span className="y">$</span> sudo join buidlers</div>

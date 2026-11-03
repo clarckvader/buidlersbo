@@ -43,3 +43,10 @@ export function takeNext(storage: KV | null = session()): string | null {
     return null
   }
 }
+
+// Al cerrar el modal sin iniciar sesión: que un login posterior no lleve a un destino viejo.
+export function clearNext(storage: KV | null = session()): void {
+  try {
+    storage?.removeItem(KEY)
+  } catch {}
+}

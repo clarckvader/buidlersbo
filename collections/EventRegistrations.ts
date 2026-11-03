@@ -3,7 +3,14 @@ import { isStaff, staffWrite } from './access'
 import { memberHandler } from '../lib/session'
 import { cancelRegistration, registerForEvent } from '../lib/services/events'
 
-const eventId = (req: { routeParams?: Record<string, unknown> }) => String(req.routeParams?.eventId ?? '')
+import { ServiceError } from '../lib/services/projects'
+
+// Solo ids enteros; cualquier otra cosa es 404.
+const eventId = (req: { routeParams?: Record<string, unknown> }) => {
+  const value = String(req.routeParams?.eventId ?? '')
+  if (!/^\d+$/.test(value)) throw new ServiceError(404, 'Evento no encontrado')
+  return value
+}
 
 // Inscripciones de miembros a eventos. El cupo ocupado de un evento es el conteo de estas.
 export const EventRegistrations: CollectionConfig = {

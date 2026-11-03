@@ -4,6 +4,7 @@ import { isStaffField, staffWrite } from './access'
 import { slugField } from './fields/slug'
 import { memberHandler, readBody } from '../lib/session'
 import {
+  ServiceError,
   createProject,
   deleteProject,
   getInviteToken,
@@ -13,13 +14,19 @@ import {
   listProjectInvites,
   regenerateInviteToken,
   removeMember,
+  syncOwnerMembership,
   updateProject,
   type ProjectInput,
 } from '../lib/services/projects'
 
 // Nunca devolver el token del enlace en respuestas de proyecto.
 const publicProject = ({ inviteToken: _token, ...project }: Project) => project
-const param = (req: PayloadRequest, name: string) => String(req.routeParams?.[name] ?? '')
+// Ids de la URL: solo enteros; cualquier otra cosa es un 404 (no un error de base de datos).
+const param = (req: PayloadRequest, name: string) => {
+  const value = String(req.routeParams?.[name] ?? '')
+  if (!/^\d+$/.test(value)) throw new ServiceError(404, 'No encontrado')
+  return value
+}
 
 // Campos de curaduría (Ranking): solo staff los escribe.
 const staffOnly = (field: Field): Field => ({
@@ -36,6 +43,14 @@ export const Projects: CollectionConfig = {
   defaultSort: '-createdAt',
   hooks: {
     // Al borrar un proyecto (dueño o staff desde el panel) se va su equipo y sus invitaciones.
+    afterChange: [
+      async ({ doc, previousDoc, operation, req }) => {
+        const idOf = (v: unknown) => (v && typeof v === 'object' ? (v as { id: number }).id : (v as number | null))
+        const ownerId = idOf(doc.owner)
+        if (ownerId == null) return
+        await syncOwnerMembership(req.payload, doc.id, ownerId, operation === 'update' ? idOf(previousDoc?.owner) : null, req)
+      },
+    ],
     beforeDelete: [
       async ({ req, id }) => {
         const where = { project: { equals: id } }

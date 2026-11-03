@@ -15,6 +15,7 @@ import { ProjectMembers } from './collections/ProjectMembers'
 import { ProjectInvites } from './collections/ProjectInvites'
 import { Site } from './globals/Site'
 import { migrations } from './migrations'
+import { isStaff } from './collections/access'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -44,4 +45,10 @@ export default buildConfig({
     prodMigrations: migrations,
   }),
   sharp,
+  // Payload crea `payload-locked-documents` con acceso para cualquier usuario logueado (incluidos
+  // miembros sin rol) y no deja configurarlo: se restringe a staff al iniciar.
+  onInit: async (payload) => {
+    const locks = payload.collections['payload-locked-documents']?.config
+    if (locks) locks.access = { ...locks.access, read: isStaff, create: isStaff, update: isStaff, delete: isStaff }
+  },
 })
